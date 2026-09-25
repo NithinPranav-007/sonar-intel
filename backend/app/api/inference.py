@@ -14,11 +14,12 @@ from pydantic import BaseModel, Field
 
 from ml.inference.drishti_detector import DrishtiDetector
 from backend.app.core.config import settings
+from backend.app.services.inference_service import get_inference_service
 
 router = APIRouter(prefix="/api/inference", tags=["Inference"])
 
-# Singleton detector instance for API endpoints
-detector = DrishtiDetector()
+def _get_detector() -> DrishtiDetector:
+    return get_inference_service().detector
 
 
 class DetectionItem(BaseModel):
@@ -74,6 +75,7 @@ async def detect_sonar_anomalies(
         raise HTTPException(status_code=400, detail="Failed to decode uploaded image. Invalid or corrupt image file.")
 
     h, w = image.shape[:2]
+    detector = _get_detector()
 
     # 4. Set optional override threshold
     orig_conf = detector.confidence_threshold

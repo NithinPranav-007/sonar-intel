@@ -14,10 +14,10 @@ from sqlalchemy.orm import Session
 from backend.app.database.connection import get_db
 from backend.app.database.repository import SurveyRepository, ContactRepository
 from backend.app.schemas.survey import AnalysisRequest, AnalysisResponse
-from backend.app.services.inference_service import InferenceService
+from backend.app.services.inference_service import get_inference_service
 
 router = APIRouter(prefix="/api/surveys", tags=["Analysis"])
-inference_service = InferenceService()
+inference_service = get_inference_service()
 
 
 @router.post("/{survey_id}/analyze", response_model=AnalysisResponse)

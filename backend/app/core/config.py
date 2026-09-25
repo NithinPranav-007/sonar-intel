@@ -29,12 +29,13 @@ class Settings:
     # ------------------------------------------------------------------
     # Model Provenance & Artifacts
     # ------------------------------------------------------------------
-    MODEL_PATH: str = os.getenv(
-        "MODEL_PATH",
-        str(_repo_root / "ml" / "models" / "dristri" / "best_detector.pt")
-    )
-    MODEL_NAME: str = os.getenv("MODEL_NAME", "DRISHTI-YOLOv8s")
-    MODEL_VERSION: str = os.getenv("MODEL_VERSION", "baseline-v1")
+    _distilled_model = _repo_root / "ml" / "models" / "best_distilled_yolo11n.pt"
+    _baseline_model = _repo_root / "ml" / "models" / "dristri" / "best_detector.pt"
+    _default_model = str(_distilled_model if _distilled_model.exists() else _baseline_model)
+
+    MODEL_PATH: str = os.getenv("MODEL_PATH", _default_model)
+    MODEL_NAME: str = os.getenv("MODEL_NAME", "DRISHTI-YOLO11n" if "yolo11" in _default_model else "DRISHTI-YOLOv8s")
+    MODEL_VERSION: str = os.getenv("MODEL_VERSION", "distilled-v1" if "yolo11" in _default_model else "baseline-v1")
     MODEL_SHA256: str = os.getenv(
         "MODEL_SHA256",
         "2f55eec5d8fe6b4737706392e259c02660a8542cddbcbd603f96d606c54cb927"

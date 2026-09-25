@@ -7,10 +7,33 @@ import sys
 from pathlib import Path
 import datetime
 
+# Strict memory and thread allocation constraints for 512MB Render free tier
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
+os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+os.environ.setdefault("MALLOC_ARENA_MAX", "2")
+
 # Ensure project repository root is always in sys.path
 _repo_root = str(Path(__file__).resolve().parent.parent.parent)
 if _repo_root not in sys.path:
     sys.path.insert(0, _repo_root)
+
+try:
+    import torch
+    torch.set_num_threads(1)
+    torch.set_num_interop_threads(1)
+    torch.set_grad_enabled(False)
+except Exception:
+    pass
+
+try:
+    import cv2
+    cv2.setNumThreads(1)
+except Exception:
+    pass
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

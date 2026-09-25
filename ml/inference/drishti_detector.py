@@ -15,6 +15,7 @@ NO DATABASE, NO GIS, NO API SIDE EFFECTS.
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass, asdict
 import os
+import gc
 import cv2
 import numpy as np
 import torch
@@ -134,20 +135,42 @@ class DrishtiDetector:
             print(f"[DrishtiDetector] Startup load notice: {e}. Model will load on demand.")
 
     def _get_or_load_model(self):
-        """Loads and caches the YOLOv8s/YOLO11n model once per process."""
+        """Loads and caches the YOLOv8s/YOLO11n model once per process with low-memory constraints."""
         self.model_path = self._resolve_model_path(self.model_path)
         cache_key = f"{self.model_path}_{self.device}"
         if cache_key in DrishtiDetector._model_cache:
             return DrishtiDetector._model_cache[cache_key]
+
+        # Enforce CPU single-thread limits to prevent thread-pool memory explosion
+        try:
+            torch.set_num_threads(1)
+        except Exception:
+            pass
+        try:
+            torch.set_num_interop_threads(1)
+        except Exception:
+            pass
+        try:
+            torch.set_grad_enabled(False)
+        except Exception:
+            pass
 
         from ultralytics import YOLO
 
         if not os.path.exists(self.model_path):
             raise FileNotFoundError(f"Sonar AI model checkpoint not found at: {self.model_path}")
 
-        print(f"[DrishtiDetector] Loading model from {self.model_path} onto {self.device}...")
+        print(f"[DrishtiDetector] Loading model from {self.model_path} onto {self.device} (low-memory mode)...")
         model = YOLO(self.model_path)
+        # Fuse model layers if available to save RAM and computation
+        if hasattr(model, "fuse"):
+            try:
+                model.fuse()
+            except Exception:
+                pass
+
         DrishtiDetector._model_cache[cache_key] = model
+        gc.collect()
         return model
 
     def preprocess(self, image: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
@@ -171,7 +194,7 @@ class DrishtiDetector:
     ) -> List[DrishtiDetection]:
         """
         Executes DRISHTI detection on a single image or tile.
-        Preprocesses input, executes inference, and decodes detections.
+        Preprocesses input, executes inference, and decodes detections under torch.inference_mode().
 
         Args:
             image: 2D or 3D numpy image array.
@@ -195,18 +218,22 @@ class DrishtiDetector:
         # 1. Apply model-specific preprocessing (Lee + CLAHE)
         preprocessed_bgr, _ = self.preprocess(image)
 
-        # 2. Run Ultralytics YOLO inference
-        results = self.model(
-            preprocessed_bgr,
-            imgsz=self.image_size,
-            conf=self.confidence_threshold,
-            iou=self.iou_threshold,
-            device=self.device,
-            verbose=False
-        )
+        # 2. Run Ultralytics YOLO inference under torch.inference_mode()
+        with torch.inference_mode():
+            results = self.model(
+                preprocessed_bgr,
+                imgsz=min(self.image_size, 640),
+                conf=self.confidence_threshold,
+                iou=self.iou_threshold,
+                device=self.device,
+                max_det=50,
+                verbose=False
+            )
+
+        del preprocessed_bgr
 
         # 3. Decode detections
-        return self.decode(
+        detections = self.decode(
             results=results,
             image_width=w,
             image_height=h,
@@ -214,6 +241,9 @@ class DrishtiDetector:
             offset_x=offset_x,
             offset_y=offset_y
         )
+
+        del results
+        return detections
 
     def decode(
         self,

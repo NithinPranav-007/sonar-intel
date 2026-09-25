@@ -19,13 +19,13 @@ from backend.app.database.models import SurveyModel
 from backend.app.database.repository import SurveyRepository, ContactRepository
 from backend.app.schemas.survey import SurveyUploadResponse
 from backend.app.services.sonar_service import SonarService
-from backend.app.services.inference_service import InferenceService
+from backend.app.services.inference_service import get_inference_service
 
 from backend.app.core.config import settings
 
 router = APIRouter(prefix="/api/demo", tags=["Demo"])
 sonar_service = SonarService()
-inference_service = InferenceService()
+inference_service = get_inference_service()
 
 def resolve_demo_file(rel_path: Optional[str]) -> Optional[str]:
     if not rel_path:

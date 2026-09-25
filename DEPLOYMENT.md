@@ -62,9 +62,9 @@ You can deploy the backend to Render either using the automated **Blueprint (`re
      ```
    - **Start Command**:
      ```bash
-     uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+     uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT --workers 1
      ```
-     *(If you set Root Directory to `backend`, use `uvicorn app.main:app --host 0.0.0.0 --port $PORT`)*
+     *(If you set Root Directory to `backend`, use `uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1`)*
    - **Plan**: `Free` (or higher)
 
 4. Under **Advanced** -> **Health Check Path**, enter:
@@ -77,6 +77,11 @@ You can deploy the backend to Render either using the automated **Blueprint (`re
 | Variable | Recommended Value | Description |
 |---|---|---|
 | `PYTHON_VERSION` | `3.11.9` | Stable Python runtime for PyTorch & OpenCV |
+| `OMP_NUM_THREADS` | `1` | Strictly caps OpenMP thread memory pool (<512MB RAM) |
+| `MKL_NUM_THREADS` | `1` | Strictly caps Intel MKL thread memory pool |
+| `OPENBLAS_NUM_THREADS` | `1` | Prevents OpenBLAS thread allocation bloat |
+| `MALLOC_ARENA_MAX` | `2` | Prevents Linux glibc memory arena bloat on Render |
+| `MODEL_PATH` | `ml/models/best_distilled_yolo11n.pt` | Ultralightweight distilled YOLO11n checkpoint (~5MB) |
 | `ALLOWED_ORIGINS` | `https://<your-vercel-app>.vercel.app,http://localhost:5173` | Comma-separated list of allowed frontend origins |
 | `FRONTEND_URL` | `https://<your-vercel-app>.vercel.app` | Primary frontend Vercel URL |
 | `CORS_ORIGIN_REGEX` | `^https:\/\/.*\.vercel\.app$` | Automatically permits all Vercel production & preview URLs |

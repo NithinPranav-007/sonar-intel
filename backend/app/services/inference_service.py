@@ -11,6 +11,7 @@ Pluggable and configuration-driven.
 
 from typing import List, Optional, Dict, Any
 import os
+import gc
 import cv2
 import numpy as np
 
@@ -28,6 +29,15 @@ from ml.verification.swnet_verifier import SWNetVerifier
 from ml.evidence.extractor import EvidenceExtractor
 from ml.fusion.evidence_fusion import EvidenceFusionEngine
 from ml.fusion.contact_package import ContactPackage, ContactPackageBuilder
+
+
+_shared_inference_service: Optional["InferenceService"] = None
+
+def get_inference_service() -> "InferenceService":
+    global _shared_inference_service
+    if _shared_inference_service is None:
+        _shared_inference_service = InferenceService()
+    return _shared_inference_service
 
 
 class InferenceService:
@@ -102,6 +112,10 @@ class InferenceService:
                     offset_y=offset_y
                 )
                 raw_detections.extend(tile_dets)
+                tile["tile_image"] = None
+                del tile_img
+            del tiles
+            gc.collect()
 
         # 3. Deduplicate detections across overlapping tile boundaries
         # Adapt to dict format for existing deduplicate_detections
