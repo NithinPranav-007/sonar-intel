@@ -1,0 +1,785 @@
+{
+  "experiment_title": "SSS Normalization - Isolated Research Experiment",
+  "dataset_name": "AI4Shipwrecks",
+  "method": "swath_percentile_contrast_normalization",
+  "parameters": {
+    "p_low": 1.0,
+    "p_high": 99.0
+  },
+  "rationale": "In the absence of raw physical acoustic telemetry (altitude, slant-range, beam pattern), physical radiometric calibration is impossible without inventing non-existent metadata. A swath-level percentile contrast stretch (1st to 99th percentile) linearly expands dynamic range while preventing extreme speckle spikes from compressing acoustic highlights and shadows. Swath-level application prevents ping-wise striping artifacts.",
+  "num_samples_evaluated": 20,
+  "aggregate_findings": {
+    "raw_swath_mean_range": [
+      28.09,
+      101.99
+    ],
+    "normalized_swath_mean_range": [
+      35.89,
+      101.99
+    ],
+    "cross_swath_mean_std_raw": 21.27,
+    "cross_swath_mean_std_normalized": 16.5,
+    "mean_target_contrast_change_pct": -1.26,
+    "mean_highlight_clipping_pct": 10.87
+  },
+  "decision": {
+    "verdict": "MODIFY",
+    "detailed_assessment": {
+      "consistency_between_swaths": "MODERATE IMPROVEMENT: Raw swath means varied between 28.1 and 102.0 (cross-swath std = 21.27). After 1-99% normalization, swath means centered closer (between 35.9 and 102.0, cross-swath std = 16.5).",
+      "target_visibility": "PRESERVED AND ENHANCED: Target highlight backscatter was boosted in dark swaths (e.g. Viator_01 and Monohansett_02) with average target-to-ambient contrast change of -1.3%. Acoustic shadows retained zero/low returns.",
+      "background_suppression": "NEUTRAL TO SLIGHT NEGATIVE: Linear contrast stretching expands both seabed speckle and target highlights equally. It does not selectively suppress ambient seabed reverberation. In noisy shallow swaths, background speckle grain became slightly more visible.",
+      "downstream_object_detection": "POSITIVE BENEFIT EXPECTED: Standard object detectors (YOLO) benefit from consistent dynamic range across batches. However, global swath stretching must be applied prior to tiling to prevent tile-boundary contrast discontinuities."
+    },
+    "recommendation": "MODIFY: Adopt swath-level robust percentile normalization as a baseline contrast standardization step, but DO NOT rely on it for background suppression. Local adaptive enhancement (e.g. CLAHE or local contrast) should be evaluated in subsequent stages."
+  },
+  "per_sample_results": [
+    {
+      "sample_id": "test_Artificial_Reef_06.png",
+      "filename": "Artificial_Reef_06.png",
+      "site_id": "Artificial_Reef",
+      "split": "test",
+      "height": 2476,
+      "is_empty_mask": false,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 55.55,
+        "std": 49.97
+      },
+      "percentiles": {
+        "p_low": 0.0,
+        "p_high": 247.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 56.82,
+        "std": 51.31
+      },
+      "target_preservation": {
+        "has_target": true,
+        "target_pixels": 11853,
+        "raw_target_mean": 98.74,
+        "raw_target_max": 255,
+        "raw_ambient_mean": 62.5,
+        "raw_contrast_ratio": 0.58,
+        "norm_target_mean": 100.94,
+        "norm_target_max": 255,
+        "norm_ambient_mean": 64.03,
+        "norm_contrast_ratio": 0.576,
+        "contrast_change_pct": -0.59,
+        "highlight_clipping_pct": 8.77
+      },
+      "vis_file": "norm_eval_01_Artificial_Reef_06.png"
+    },
+    {
+      "sample_id": "test_Barge_No_1_03.png",
+      "filename": "Barge_No_1_03.png",
+      "site_id": "Barge_No_1",
+      "split": "test",
+      "height": 2595,
+      "is_empty_mask": false,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 67.27,
+        "std": 54.07
+      },
+      "percentiles": {
+        "p_low": 0.0,
+        "p_high": 252.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 67.6,
+        "std": 54.55
+      },
+      "target_preservation": {
+        "has_target": true,
+        "target_pixels": 50282,
+        "raw_target_mean": 98.39,
+        "raw_target_max": 255,
+        "raw_ambient_mean": 62.89,
+        "raw_contrast_ratio": 0.564,
+        "norm_target_mean": 98.97,
+        "norm_target_max": 255,
+        "norm_ambient_mean": 63.21,
+        "norm_contrast_ratio": 0.566,
+        "contrast_change_pct": 0.24,
+        "highlight_clipping_pct": 6.02
+      },
+      "vis_file": "norm_eval_02_Barge_No_1_03.png"
+    },
+    {
+      "sample_id": "test_Corsair_02.png",
+      "filename": "Corsair_02.png",
+      "site_id": "Corsair",
+      "split": "test",
+      "height": 1863,
+      "is_empty_mask": false,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 84.64,
+        "std": 73.7
+      },
+      "percentiles": {
+        "p_low": 2.0,
+        "p_high": 255.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 82.96,
+        "std": 74.08
+      },
+      "target_preservation": {
+        "has_target": true,
+        "target_pixels": 8237,
+        "raw_target_mean": 167.76,
+        "raw_target_max": 255,
+        "raw_ambient_mean": 102.84,
+        "raw_contrast_ratio": 0.631,
+        "norm_target_mean": 166.54,
+        "norm_target_max": 255,
+        "norm_ambient_mean": 101.23,
+        "norm_contrast_ratio": 0.645,
+        "contrast_change_pct": 2.2,
+        "highlight_clipping_pct": 7.61
+      },
+      "vis_file": "norm_eval_03_Corsair_02.png"
+    },
+    {
+      "sample_id": "test_Corsican_06.png",
+      "filename": "Corsican_06.png",
+      "site_id": "Corsican",
+      "split": "test",
+      "height": 2573,
+      "is_empty_mask": false,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 87.76,
+        "std": 78.59
+      },
+      "percentiles": {
+        "p_low": 0.0,
+        "p_high": 255.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 87.76,
+        "std": 78.59
+      },
+      "target_preservation": {
+        "has_target": true,
+        "target_pixels": 9368,
+        "raw_target_mean": 178.41,
+        "raw_target_max": 255,
+        "raw_ambient_mean": 175.68,
+        "raw_contrast_ratio": 0.016,
+        "norm_target_mean": 178.41,
+        "norm_target_max": 255,
+        "norm_ambient_mean": 175.68,
+        "norm_contrast_ratio": 0.016,
+        "contrast_change_pct": 0.0,
+        "highlight_clipping_pct": 17.56
+      },
+      "vis_file": "norm_eval_04_Corsican_06.png"
+    },
+    {
+      "sample_id": "train_DM_Wilson_11.png",
+      "filename": "DM_Wilson_11.png",
+      "site_id": "DM_Wilson",
+      "split": "train",
+      "height": 2476,
+      "is_empty_mask": false,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 34.69,
+        "std": 41.6
+      },
+      "percentiles": {
+        "p_low": 0.0,
+        "p_high": 169.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 51.17,
+        "std": 59.71
+      },
+      "target_preservation": {
+        "has_target": true,
+        "target_pixels": 171144,
+        "raw_target_mean": 56.14,
+        "raw_target_max": 255,
+        "raw_ambient_mean": 23.66,
+        "raw_contrast_ratio": 1.373,
+        "norm_target_mean": 79.21,
+        "norm_target_max": 255,
+        "norm_ambient_mean": 34.99,
+        "norm_contrast_ratio": 1.264,
+        "contrast_change_pct": -7.94,
+        "highlight_clipping_pct": 7.11
+      },
+      "vis_file": "norm_eval_05_DM_Wilson_11.png"
+    },
+    {
+      "sample_id": "train_DR_Hanna_04.png",
+      "filename": "DR_Hanna_04.png",
+      "site_id": "DR_Hanna",
+      "split": "train",
+      "height": 2202,
+      "is_empty_mask": false,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 79.76,
+        "std": 74.35
+      },
+      "percentiles": {
+        "p_low": 0.0,
+        "p_high": 255.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 79.76,
+        "std": 74.35
+      },
+      "target_preservation": {
+        "has_target": true,
+        "target_pixels": 40725,
+        "raw_target_mean": 195.07,
+        "raw_target_max": 255,
+        "raw_ambient_mean": 65.12,
+        "raw_contrast_ratio": 1.995,
+        "norm_target_mean": 195.07,
+        "norm_target_max": 255,
+        "norm_ambient_mean": 65.12,
+        "norm_contrast_ratio": 1.995,
+        "contrast_change_pct": 0.0,
+        "highlight_clipping_pct": 29.87
+      },
+      "vis_file": "norm_eval_06_DR_Hanna_04.png"
+    },
+    {
+      "sample_id": "train_EB_Allen_22.png",
+      "filename": "EB_Allen_22.png",
+      "site_id": "EB_Allen",
+      "split": "train",
+      "height": 1984,
+      "is_empty_mask": false,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 40.21,
+        "std": 44.62
+      },
+      "percentiles": {
+        "p_low": 0.0,
+        "p_high": 216.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 46.76,
+        "std": 51.12
+      },
+      "target_preservation": {
+        "has_target": true,
+        "target_pixels": 176244,
+        "raw_target_mean": 66.33,
+        "raw_target_max": 255,
+        "raw_ambient_mean": 48.82,
+        "raw_contrast_ratio": 0.359,
+        "norm_target_mean": 75.02,
+        "norm_target_max": 255,
+        "norm_ambient_mean": 56.78,
+        "norm_contrast_ratio": 0.321,
+        "contrast_change_pct": -10.42,
+        "highlight_clipping_pct": 8.86
+      },
+      "vis_file": "norm_eval_07_EB_Allen_22.png"
+    },
+    {
+      "sample_id": "train_Egyptian_04.png",
+      "filename": "Egyptian_04.png",
+      "site_id": "Egyptian",
+      "split": "train",
+      "height": 2183,
+      "is_empty_mask": false,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 74.05,
+        "std": 70.25
+      },
+      "percentiles": {
+        "p_low": 0.0,
+        "p_high": 255.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 74.05,
+        "std": 70.25
+      },
+      "target_preservation": {
+        "has_target": true,
+        "target_pixels": 42835,
+        "raw_target_mean": 196.75,
+        "raw_target_max": 255,
+        "raw_ambient_mean": 124.63,
+        "raw_contrast_ratio": 0.579,
+        "norm_target_mean": 196.75,
+        "norm_target_max": 255,
+        "norm_ambient_mean": 124.63,
+        "norm_contrast_ratio": 0.579,
+        "contrast_change_pct": 0.0,
+        "highlight_clipping_pct": 23.19
+      },
+      "vis_file": "norm_eval_08_Egyptian_04.png"
+    },
+    {
+      "sample_id": "train_Grecian_04.png",
+      "filename": "Grecian_04.png",
+      "site_id": "Grecian",
+      "split": "train",
+      "height": 1058,
+      "is_empty_mask": false,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 71.48,
+        "std": 57.95
+      },
+      "percentiles": {
+        "p_low": 0.0,
+        "p_high": 249.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 72.76,
+        "std": 59.07
+      },
+      "target_preservation": {
+        "has_target": true,
+        "target_pixels": 50460,
+        "raw_target_mean": 115.09,
+        "raw_target_max": 255,
+        "raw_ambient_mean": 69.48,
+        "raw_contrast_ratio": 0.656,
+        "norm_target_mean": 117.06,
+        "norm_target_max": 255,
+        "norm_ambient_mean": 70.69,
+        "norm_contrast_ratio": 0.656,
+        "contrast_change_pct": -0.08,
+        "highlight_clipping_pct": 7.37
+      },
+      "vis_file": "norm_eval_09_Grecian_04.png"
+    },
+    {
+      "sample_id": "test_Haltiner_Barge_02.png",
+      "filename": "Haltiner_Barge_02.png",
+      "site_id": "Haltiner_Barge",
+      "split": "test",
+      "height": 853,
+      "is_empty_mask": false,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 66.07,
+        "std": 61.18
+      },
+      "percentiles": {
+        "p_low": 0.0,
+        "p_high": 255.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 66.07,
+        "std": 61.18
+      },
+      "target_preservation": {
+        "has_target": true,
+        "target_pixels": 57768,
+        "raw_target_mean": 45.55,
+        "raw_target_max": 255,
+        "raw_ambient_mean": 31.49,
+        "raw_contrast_ratio": 0.446,
+        "norm_target_mean": 45.55,
+        "norm_target_max": 255,
+        "norm_ambient_mean": 31.49,
+        "norm_contrast_ratio": 0.446,
+        "contrast_change_pct": 0.0,
+        "highlight_clipping_pct": 1.12
+      },
+      "vis_file": "norm_eval_10_Haltiner_Barge_02.png"
+    },
+    {
+      "sample_id": "train_Heart_Failure_09.png",
+      "filename": "Heart_Failure_09.png",
+      "site_id": "Heart_Failure",
+      "split": "train",
+      "height": 1944,
+      "is_empty_mask": false,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 30.39,
+        "std": 37.74
+      },
+      "percentiles": {
+        "p_low": 0.0,
+        "p_high": 211.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 35.89,
+        "std": 43.41
+      },
+      "target_preservation": {
+        "has_target": true,
+        "target_pixels": 20713,
+        "raw_target_mean": 35.17,
+        "raw_target_max": 255,
+        "raw_ambient_mean": 39.09,
+        "raw_contrast_ratio": -0.1,
+        "norm_target_mean": 41.94,
+        "norm_target_max": 255,
+        "norm_ambient_mean": 46.55,
+        "norm_contrast_ratio": -0.099,
+        "contrast_change_pct": 1.51,
+        "highlight_clipping_pct": 0.31
+      },
+      "vis_file": "norm_eval_11_Heart_Failure_09.png"
+    },
+    {
+      "sample_id": "train_Isaac_M_Scott_01.png",
+      "filename": "Isaac_M_Scott_01.png",
+      "site_id": "Isaac_M_Scott",
+      "split": "train",
+      "height": 2201,
+      "is_empty_mask": false,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 101.99,
+        "std": 82.42
+      },
+      "percentiles": {
+        "p_low": 0.0,
+        "p_high": 255.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 101.99,
+        "std": 82.42
+      },
+      "target_preservation": {
+        "has_target": true,
+        "target_pixels": 97337,
+        "raw_target_mean": 140.79,
+        "raw_target_max": 255,
+        "raw_ambient_mean": 120.65,
+        "raw_contrast_ratio": 0.167,
+        "norm_target_mean": 140.79,
+        "norm_target_max": 255,
+        "norm_ambient_mean": 120.65,
+        "norm_contrast_ratio": 0.167,
+        "contrast_change_pct": 0.0,
+        "highlight_clipping_pct": 12.61
+      },
+      "vis_file": "norm_eval_12_Isaac_M_Scott_01.png"
+    },
+    {
+      "sample_id": "test_Artificial_Reef_01.png",
+      "filename": "Artificial_Reef_01.png",
+      "site_id": "Artificial_Reef",
+      "split": "test",
+      "height": 2476,
+      "is_empty_mask": true,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 40.71,
+        "std": 39.61
+      },
+      "percentiles": {
+        "p_low": 0.0,
+        "p_high": 194.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 52.47,
+        "std": 49.55
+      },
+      "target_preservation": {
+        "has_target": false,
+        "target_pixels": 0,
+        "raw_target_mean": null,
+        "norm_target_mean": null,
+        "raw_contrast_ratio": null,
+        "norm_contrast_ratio": null,
+        "contrast_change_pct": null,
+        "highlight_clipping_pct": null
+      },
+      "vis_file": "norm_eval_13_Artificial_Reef_01.png"
+    },
+    {
+      "sample_id": "test_Barge_No_1_01.png",
+      "filename": "Barge_No_1_01.png",
+      "site_id": "Barge_No_1",
+      "split": "test",
+      "height": 2574,
+      "is_empty_mask": true,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 73.15,
+        "std": 56.77
+      },
+      "percentiles": {
+        "p_low": 0.0,
+        "p_high": 254.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 73.16,
+        "std": 56.78
+      },
+      "target_preservation": {
+        "has_target": false,
+        "target_pixels": 0,
+        "raw_target_mean": null,
+        "norm_target_mean": null,
+        "raw_contrast_ratio": null,
+        "norm_contrast_ratio": null,
+        "contrast_change_pct": null,
+        "highlight_clipping_pct": null
+      },
+      "vis_file": "norm_eval_14_Barge_No_1_01.png"
+    },
+    {
+      "sample_id": "test_Corsair_04.png",
+      "filename": "Corsair_04.png",
+      "site_id": "Corsair",
+      "split": "test",
+      "height": 1849,
+      "is_empty_mask": true,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 84.46,
+        "std": 73.04
+      },
+      "percentiles": {
+        "p_low": 2.0,
+        "p_high": 255.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 82.78,
+        "std": 73.41
+      },
+      "target_preservation": {
+        "has_target": false,
+        "target_pixels": 0,
+        "raw_target_mean": null,
+        "norm_target_mean": null,
+        "raw_contrast_ratio": null,
+        "norm_contrast_ratio": null,
+        "contrast_change_pct": null,
+        "highlight_clipping_pct": null
+      },
+      "vis_file": "norm_eval_15_Corsair_04.png"
+    },
+    {
+      "sample_id": "test_Corsican_04.png",
+      "filename": "Corsican_04.png",
+      "site_id": "Corsican",
+      "split": "test",
+      "height": 1472,
+      "is_empty_mask": true,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 88.19,
+        "std": 75.6
+      },
+      "percentiles": {
+        "p_low": 3.0,
+        "p_high": 255.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 85.85,
+        "std": 76.33
+      },
+      "target_preservation": {
+        "has_target": false,
+        "target_pixels": 0,
+        "raw_target_mean": null,
+        "norm_target_mean": null,
+        "raw_contrast_ratio": null,
+        "norm_contrast_ratio": null,
+        "contrast_change_pct": null,
+        "highlight_clipping_pct": null
+      },
+      "vis_file": "norm_eval_16_Corsican_04.png"
+    },
+    {
+      "sample_id": "train_DM_Wilson_01.png",
+      "filename": "DM_Wilson_01.png",
+      "site_id": "DM_Wilson",
+      "split": "train",
+      "height": 5579,
+      "is_empty_mask": true,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 70.96,
+        "std": 63.88
+      },
+      "percentiles": {
+        "p_low": 0.0,
+        "p_high": 255.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 70.96,
+        "std": 63.88
+      },
+      "target_preservation": {
+        "has_target": false,
+        "target_pixels": 0,
+        "raw_target_mean": null,
+        "norm_target_mean": null,
+        "raw_contrast_ratio": null,
+        "norm_contrast_ratio": null,
+        "contrast_change_pct": null,
+        "highlight_clipping_pct": null
+      },
+      "vis_file": "norm_eval_17_DM_Wilson_01.png"
+    },
+    {
+      "sample_id": "train_DR_Hanna_01.png",
+      "filename": "DR_Hanna_01.png",
+      "site_id": "DR_Hanna",
+      "split": "train",
+      "height": 2193,
+      "is_empty_mask": true,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 88.81,
+        "std": 75.77
+      },
+      "percentiles": {
+        "p_low": 0.0,
+        "p_high": 255.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 88.81,
+        "std": 75.77
+      },
+      "target_preservation": {
+        "has_target": false,
+        "target_pixels": 0,
+        "raw_target_mean": null,
+        "norm_target_mean": null,
+        "raw_contrast_ratio": null,
+        "norm_contrast_ratio": null,
+        "contrast_change_pct": null,
+        "highlight_clipping_pct": null
+      },
+      "vis_file": "norm_eval_18_DR_Hanna_01.png"
+    },
+    {
+      "sample_id": "train_EB_Allen_19.png",
+      "filename": "EB_Allen_19.png",
+      "site_id": "EB_Allen",
+      "split": "train",
+      "height": 1952,
+      "is_empty_mask": true,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 28.09,
+        "std": 36.21
+      },
+      "percentiles": {
+        "p_low": 0.0,
+        "p_high": 140.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 49.84,
+        "std": 62.06
+      },
+      "target_preservation": {
+        "has_target": false,
+        "target_pixels": 0,
+        "raw_target_mean": null,
+        "norm_target_mean": null,
+        "raw_contrast_ratio": null,
+        "norm_contrast_ratio": null,
+        "contrast_change_pct": null,
+        "highlight_clipping_pct": null
+      },
+      "vis_file": "norm_eval_19_EB_Allen_19.png"
+    },
+    {
+      "sample_id": "train_Egyptian_02.png",
+      "filename": "Egyptian_02.png",
+      "site_id": "Egyptian",
+      "split": "train",
+      "height": 2186,
+      "is_empty_mask": true,
+      "raw_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 78.45,
+        "std": 74.96
+      },
+      "percentiles": {
+        "p_low": 0.0,
+        "p_high": 255.0
+      },
+      "normalized_metrics": {
+        "min": 0,
+        "max": 255,
+        "mean": 78.45,
+        "std": 74.96
+      },
+      "target_preservation": {
+        "has_target": false,
+        "target_pixels": 0,
+        "raw_target_mean": null,
+        "norm_target_mean": null,
+        "raw_contrast_ratio": null,
+        "norm_contrast_ratio": null,
+        "contrast_change_pct": null,
+        "highlight_clipping_pct": null
+      },
+      "vis_file": "norm_eval_20_Egyptian_02.png"
+    }
+  ]
+}

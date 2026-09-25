@@ -1,0 +1,249 @@
+{
+  "survey_id": "SURVEY-SMOKE-TEST",
+  "contacts_count": 11,
+  "contacts": [
+    {
+      "contact_id": "C001",
+      "survey_id": "SURVEY-SMOKE-TEST",
+      "class_name": "artificial_anomaly",
+      "confidence": 0.73,
+      "bbox": {
+        "x1": 766,
+        "y1": 512,
+        "x2": 944,
+        "y2": 759
+      },
+      "data_quality": 0.82,
+      "shadow_evidence": 0.2,
+      "context_score": 0.69,
+      "priority": "HIGH",
+      "latitude": 11.234695,
+      "longitude": 76.543647,
+      "localization_status": "ESTIMATED",
+      "review_status": "AI_CANDIDATE",
+      "review_note": null,
+      "model_version": "yolov8n-sonar-baseline"
+    },
+    {
+      "contact_id": "C002",
+      "survey_id": "SURVEY-SMOKE-TEST",
+      "class_name": "artificial_anomaly",
+      "confidence": 0.64,
+      "bbox": {
+        "x1": 405,
+        "y1": 165,
+        "x2": 588,
+        "y2": 348
+      },
+      "data_quality": 0.82,
+      "shadow_evidence": 0.1,
+      "context_score": 0.62,
+      "priority": "MEDIUM",
+      "latitude": 11.234372,
+      "longitude": 76.543125,
+      "localization_status": "ESTIMATED",
+      "review_status": "AI_CANDIDATE",
+      "review_note": null,
+      "model_version": "yolov8n-sonar-baseline"
+    },
+    {
+      "contact_id": "C003",
+      "survey_id": "SURVEY-SMOKE-TEST",
+      "class_name": "artificial_anomaly",
+      "confidence": 0.54,
+      "bbox": {
+        "x1": 206,
+        "y1": 1119,
+        "x2": 340,
+        "y2": 1231
+      },
+      "data_quality": 0.82,
+      "shadow_evidence": 0.16,
+      "context_score": 0.65,
+      "priority": "MEDIUM",
+      "latitude": 11.235601,
+      "longitude": 76.543754,
+      "localization_status": "ESTIMATED",
+      "review_status": "AI_CANDIDATE",
+      "review_note": null,
+      "model_version": "yolov8n-sonar-baseline"
+    },
+    {
+      "contact_id": "C004",
+      "survey_id": "SURVEY-SMOKE-TEST",
+      "class_name": "artificial_anomaly",
+      "confidence": 0.53,
+      "bbox": {
+        "x1": 585,
+        "y1": 0,
+        "x2": 602,
+        "y2": 640
+      },
+      "data_quality": 0.82,
+      "shadow_evidence": 0.05,
+      "context_score": 0.59,
+      "priority": "MEDIUM",
+      "latitude": 11.234409,
+      "longitude": 76.543232,
+      "localization_status": "ESTIMATED",
+      "review_status": "AI_CANDIDATE",
+      "review_note": null,
+      "model_version": "yolov8n-sonar-baseline"
+    },
+    {
+      "contact_id": "C005",
+      "survey_id": "SURVEY-SMOKE-TEST",
+      "class_name": "artificial_anomaly",
+      "confidence": 0.53,
+      "bbox": {
+        "x1": 683,
+        "y1": 0,
+        "x2": 696,
+        "y2": 640
+      },
+      "data_quality": 0.82,
+      "shadow_evidence": 0.05,
+      "context_score": 0.59,
+      "priority": "MEDIUM",
+      "latitude": 11.234371,
+      "longitude": 76.543289,
+      "localization_status": "ESTIMATED",
+      "review_status": "AI_CANDIDATE",
+      "review_note": null,
+      "model_version": "yolov8n-sonar-baseline"
+    },
+    {
+      "contact_id": "C006",
+      "survey_id": "SURVEY-SMOKE-TEST",
+      "class_name": "artificial_anomaly",
+      "confidence": 0.53,
+      "bbox": {
+        "x1": 585,
+        "y1": 512,
+        "x2": 602,
+        "y2": 1152
+      },
+      "data_quality": 0.82,
+      "shadow_evidence": 0.05,
+      "context_score": 0.59,
+      "priority": "MEDIUM",
+      "latitude": 11.235039,
+      "longitude": 76.543652,
+      "localization_status": "ESTIMATED",
+      "review_status": "AI_CANDIDATE",
+      "review_note": null,
+      "model_version": "yolov8n-sonar-baseline"
+    },
+    {
+      "contact_id": "C007",
+      "survey_id": "SURVEY-SMOKE-TEST",
+      "class_name": "artificial_anomaly",
+      "confidence": 0.53,
+      "bbox": {
+        "x1": 683,
+        "y1": 512,
+        "x2": 696,
+        "y2": 1152
+      },
+      "data_quality": 0.82,
+      "shadow_evidence": 0.05,
+      "context_score": 0.59,
+      "priority": "MEDIUM",
+      "latitude": 11.235001,
+      "longitude": 76.543709,
+      "localization_status": "ESTIMATED",
+      "review_status": "AI_CANDIDATE",
+      "review_note": null,
+      "model_version": "yolov8n-sonar-baseline"
+    },
+    {
+      "contact_id": "C008",
+      "survey_id": "SURVEY-SMOKE-TEST",
+      "class_name": "artificial_anomaly",
+      "confidence": 0.53,
+      "bbox": {
+        "x1": 585,
+        "y1": 1024,
+        "x2": 602,
+        "y2": 1664
+      },
+      "data_quality": 0.82,
+      "shadow_evidence": 0.05,
+      "context_score": 0.59,
+      "priority": "MEDIUM",
+      "latitude": 11.235684,
+      "longitude": 76.544082,
+      "localization_status": "ESTIMATED",
+      "review_status": "AI_CANDIDATE",
+      "review_note": null,
+      "model_version": "yolov8n-sonar-baseline"
+    },
+    {
+      "contact_id": "C009",
+      "survey_id": "SURVEY-SMOKE-TEST",
+      "class_name": "artificial_anomaly",
+      "confidence": 0.53,
+      "bbox": {
+        "x1": 682,
+        "y1": 1024,
+        "x2": 699,
+        "y2": 1664
+      },
+      "data_quality": 0.82,
+      "shadow_evidence": 0.05,
+      "context_score": 0.59,
+      "priority": "MEDIUM",
+      "latitude": 11.235645,
+      "longitude": 76.544139,
+      "localization_status": "ESTIMATED",
+      "review_status": "AI_CANDIDATE",
+      "review_note": null,
+      "model_version": "yolov8n-sonar-baseline"
+    },
+    {
+      "contact_id": "C010",
+      "survey_id": "SURVEY-SMOKE-TEST",
+      "class_name": "artificial_anomaly",
+      "confidence": 0.47,
+      "bbox": {
+        "x1": 512,
+        "y1": 168,
+        "x2": 530,
+        "y2": 345
+      },
+      "data_quality": 0.82,
+      "shadow_evidence": 0.05,
+      "context_score": 0.54,
+      "priority": "MEDIUM",
+      "latitude": 11.234362,
+      "longitude": 76.54314,
+      "localization_status": "ESTIMATED",
+      "review_status": "AI_CANDIDATE",
+      "review_note": null,
+      "model_version": "yolov8n-sonar-baseline"
+    },
+    {
+      "contact_id": "C011",
+      "survey_id": "SURVEY-SMOKE-TEST",
+      "class_name": "artificial_anomaly",
+      "confidence": 0.47,
+      "bbox": {
+        "x1": 206,
+        "y1": 1134,
+        "x2": 340,
+        "y2": 1152
+      },
+      "data_quality": 0.82,
+      "shadow_evidence": 0.24,
+      "context_score": 0.67,
+      "priority": "MEDIUM",
+      "latitude": 11.235556,
+      "longitude": 76.543724,
+      "localization_status": "ESTIMATED",
+      "review_status": "AI_CANDIDATE",
+      "review_note": null,
+      "model_version": "yolov8n-sonar-baseline"
+    }
+  ],
+  "execution_time_ms": 921.2
+}

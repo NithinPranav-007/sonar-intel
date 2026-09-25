@@ -1,0 +1,37 @@
+canonical_classes:
+- id: 0
+  name: crab_pot
+  category: Submerged Fishing Gear
+  source: GhostVision (Humminbird 455/800 kHz SSS)
+- id: 1
+  name: submarine_pipeline
+  category: Subsea Infrastructure
+  source: SubPipe (REMARO LAUV 900 kHz SSS)
+- id: 2
+  name: shipwreck
+  category: Maritime Archaeological Contact
+  source: AI4Shipwrecks (Thunder Bay 450/900 kHz SSS)
+- id: 3
+  name: ghost_net
+  category: Derelict Marine Debris
+  source: GhostNetZero / DRISHTI Simulation
+- id: 4
+  name: mine_like_contact
+  category: Unexploded Ordnance (MILCO)
+  source: MILCO-NOMBO (Teledyne Gavia 900/1800 kHz SSS)
+background_class:
+  id: -1
+  name: negative_background
+  category: Ambient Seafloor / Clutter
+  sources:
+  - AI4Shipwrecks empty swaths
+  - NOMBO natural rock formations
+conversion_policies:
+  AI4Shipwrecks_mask1: Connected components -> proximity bounding box grouping (merge
+    threshold = 20px) -> YOLO class 2
+  AI4Shipwrecks_mask0: Empty 0-byte label file -> YOLO negative background class -1
+  SubPipe_pipeline: Normalized bounding box -> YOLO class 1
+  GhostVision_crabpot: Normalized bounding box -> YOLO class 0
+  GhostNetZero_ghostnet: Normalized bounding box -> YOLO class 3
+  MILCO_mine: Normalized bounding box -> YOLO class 4
+  NOMBO_rock: Empty 0-byte label file -> YOLO negative background class -1

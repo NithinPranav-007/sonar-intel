@@ -1,0 +1,8 @@
+source_dataset,source_label,canonical_class_id,canonical_class_name,conversion_policy
+AI4Shipwrecks,shipwreck (mask 1),2,shipwreck,Connected components -> proximity bbox grouping (merge=20px)
+AI4Shipwrecks,seabed/nadir (mask 0),-1,negative_background,Empty 0-byte label file (hard negative training)
+SubPipe,pipeline,1,submarine_pipeline,Direct bounding box normalization
+GhostVision,crab_pot,0,crab_pot,Direct bounding box normalization (filtered downstream)
+GhostNetZero / DRISHTI,ghost_net,3,ghost_net,Synthetic acoustic debris bounding box normalization
+MILCO,MILCO,4,mine_like_contact,Direct bounding box normalization
+NOMBO,NOMBO,-1,negative_background,Hard negative seafloor clutter object

@@ -1,0 +1,41 @@
+dataset_version: 1.0.0
+active_profile: P4
+description: Standard DRISHTI Production Preprocessing Profile P4
+input_specification:
+  channels: 1
+  bit_depth: 8-bit or 16-bit grayscale
+  format: Side-Scan Sonar Acoustic Waterfall TIFF/PNG
+preprocessing_chain:
+- step: '01'
+  name: quality_snr_check
+  threshold_min_snr: 3.0
+- step: '02'
+  name: percentile_normalization
+  p_low: 1.0
+  p_high: 99.0
+  formula: clip(I, p1, p99)/(p99-p1)*255
+- step: '03'
+  name: lee_speckle_filter
+  window_size: 5
+  noise_variance: 0.04
+  formula: MMSE Lee speckle filter with 5x5 kernel
+- step: '04'
+  name: clahe_equalization
+  clip_limit: 2.0
+  tile_grid_size:
+  - 8
+  - 8
+- step: '05'
+  name: deterministic_tiling
+  tile_size: 640
+  stride: 512
+  overlap: 0.2
+  padding: zero/reflection
+output_format:
+  tile_dimensions:
+  - 640
+  - 640
+  - 3
+  channel_format: BGR (3 identical grayscale channels replicated)
+  dtype: uint8
+inference_consistency_enforced: true

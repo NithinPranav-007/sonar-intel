@@ -1,0 +1,8 @@
+dataset_name,canonical_class,source_url,real_or_synthetic,total_images,frequency_khz,navigation_metadata,license,role,selection_status
+AI4Shipwrecks,shipwreck (2),https://umfieldrobotics.github.io/ai4shipwrecks/,REAL,"286 swaths (8,356 tiles)",450 / 900,NOT_AVAILABLE (Synthesized),CC-BY-4.0,PRIMARY_BENCHMARK,INCLUDE_TRAIN_VAL_TEST
+SubPipe,submarine_pipeline (1),https://github.com/remaro-network/SubPipe-dataset,REAL,"1,850 frames",900,REAL_INS_DVL_GPS,CC-BY-4.0,PRIMARY_PIPELINE,INCLUDE_TRAIN_VAL_TEST
+MILCO-NOMBO,mine_like_contact (4),https://figshare.com/articles/dataset/Side-scan_sonar_imaging_for_Mine_detection/22819829,REAL,"1,170 images",900-1800,PARTIAL_AUV_LOGS,CC-BY-4.0,PRIMARY_MINE_CONTACT,INCLUDE_TRAIN_VAL_TEST
+GhostVision (Crab Pots),crab_pot (0),https://huggingface.co/datasets/PINGEcosystem/sss-crab-pot-detection-ds,REAL,"6,674 images",455 / 800,GPS_AVAILABLE,MIT,PRIMARY_CRAB_POT,INCLUDE_TRAIN_VAL_TEST
+GhostNetZero / DRISHTI,ghost_net (3),https://huggingface.co/rehan9599/drishti-detector,SYNTHETIC_ACOUSTIC_SIM,850 tiles,450 / 900,NOT_AVAILABLE (Synthesized),OpenRAIL,PRIMARY_GHOST_NET,INCLUDE_TRAIN_VAL_TEST
+UCI Sonar Mines vs Rocks,N/A,https://archive.ics.uci.edu/dataset/151/connectionist+bench+sonar+mines+vs+rocks,REAL_FREQUENCY_VECTORS,208 1D vectors,N/A,NONE,Public,UNSUITABLE_NON_IMAGE,EXCLUDE
+Marine Debris FLS,marine_debris,https://github.com/mvaldenegro/marine-debris-fls-datasets,REAL_FLS,"3,500 FLS images",High FLS,Water Tank / Flooded Quarry,CC-BY-SA,UNSUITABLE_FLS_NOT_SSS,EXCLUDE

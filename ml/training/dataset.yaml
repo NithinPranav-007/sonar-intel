@@ -1,0 +1,11 @@
+# SONAR-INTEL YOLOv8 Dataset Configuration
+# Single-class side-scan sonar artificial anomaly detection benchmark
+
+path: data/interim/yolo_split
+train: train/images
+val: val/images
+test: test/images
+
+nc: 1
+names:
+  0: artificial_anomaly

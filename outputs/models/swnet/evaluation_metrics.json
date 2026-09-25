@@ -1,0 +1,63 @@
+{
+  "model_name": "SW-Net",
+  "architecture": "SWNetArchitecture",
+  "trainable_parameters": 1327825,
+  "input_resolution": [
+    128,
+    128
+  ],
+  "training_dataset": "AI4Shipwrecks",
+  "swath_split": {
+    "train_swaths": 141,
+    "test_swaths": 120,
+    "train_patches": 732,
+    "test_patches": 421
+  },
+  "training_hyperparameters": {
+    "batch_size": 16,
+    "max_epochs": 15,
+    "best_epoch": 13,
+    "learning_rate": 0.001,
+    "optimizer": "AdamW",
+    "loss": "BCEWithLogitsLoss + SoftDiceLoss (50/50)",
+    "random_seed": 42,
+    "hardware": "cpu",
+    "total_duration_sec": 1325.25
+  },
+  "overall_test_metrics": {
+    "iou": 0.534018769539956,
+    "dice": 0.6962349876593823,
+    "precision": 0.7132704803673947,
+    "recall": 0.679994252278659,
+    "pixel_accuracy": 0.8760776112027382,
+    "background_iou": 0.8555655850777286
+  },
+  "positive_shipwreck_patches": {
+    "count": 329,
+    "metrics": {
+      "iou": 0.5448161597237461,
+      "dice": 0.7053475668213798,
+      "precision": 0.7326646771522033,
+      "recall": 0.679994252278659,
+      "pixel_accuracy": 0.8481688340020272,
+      "background_iou": 0.8144488155770089
+    },
+    "mean_orientation_deg": -3.8,
+    "mean_elongation": 1.93,
+    "mean_compactness": 0.4811
+  },
+  "negative_seabed_patches": {
+    "count": 92,
+    "metrics": {
+      "iou": 0.0,
+      "dice": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "pixel_accuracy": 0.9758818253220428,
+      "background_iou": 0.9758818253220428
+    },
+    "false_positive_activation_rate": 0.2826
+  },
+  "best_checkpoint": "outputs/models/swnet\\best_swnet.pt",
+  "final_checkpoint": "outputs/models/swnet\\final_swnet.pt"
+}

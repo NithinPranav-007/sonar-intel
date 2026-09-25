@@ -1,0 +1,63 @@
+{
+  "dataset_name": "AI4Shipwrecks (YOLOv8 Detection)",
+  "configuration": {
+    "class_id": 0,
+    "class_name": "artificial_anomaly",
+    "tile_size": 640,
+    "merge_distance_px": 20,
+    "min_width_px": 10,
+    "min_height_px": 10,
+    "min_area_px": 50,
+    "max_runaway_span_px": 550,
+    "rationale": "Hybrid Local Proximity Grouping bridges internal acoustic shadow voids and deck bulkheads within 20px gap, absorbing nearby micro-debris into parent hulls while filtering isolated speckle noise. Negative control tiles receive valid 0-byte .txt label files."
+  },
+  "summary": {
+    "total_tiles": 8356,
+    "positive_tiles": 874,
+    "negative_tiles": 7482,
+    "total_raw_components": 2237,
+    "filtered_components": 53,
+    "filtered_percentage": 2.37,
+    "merged_components": 1038,
+    "merged_percentage": 46.4,
+    "final_boxes": 1500,
+    "boxes_per_positive_tile": 1.72,
+    "boundary_boxes": 913,
+    "boundary_box_percentage": 60.87,
+    "images_written": 8356,
+    "labels_written": 8356,
+    "empty_negative_labels": 7482
+  },
+  "box_dimension_percentiles": {
+    "width_px": {
+      "P10": 12.0,
+      "P25": 27.0,
+      "P50": 68.0,
+      "P75": 173.0,
+      "P90": 299.2,
+      "P95": 427.1
+    },
+    "height_px": {
+      "P10": 14.0,
+      "P25": 27.0,
+      "P50": 63.0,
+      "P75": 168.2,
+      "P90": 345.3,
+      "P95": 494.0
+    },
+    "area_px": {
+      "P10": 181.8,
+      "P25": 835.0,
+      "P50": 4099.5,
+      "P75": 28275.8,
+      "P90": 85359.6,
+      "P95": 140134.6
+    }
+  },
+  "critical_validation_flags": {
+    "boxes_over_90pct_tile_area": 2,
+    "boxes_ultra_thin_aspect_ratio": 3,
+    "boxes_under_10px_dimension": 125
+  },
+  "validation_status": "PASS"
+}

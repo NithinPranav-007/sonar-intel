@@ -1,0 +1,7 @@
+class_id,class_name,train_tiles,val_tiles,test_tiles,total_tiles,percentage_of_corpus
+-1,negative_background,5232,1126,1124,7482,81.36%
+0,crab_pot,150,30,30,210,2.28%
+1,submarine_pipeline,150,30,30,210,2.28%
+2,shipwreck,612,130,132,874,9.5%
+3,ghost_net,150,30,30,210,2.28%
+4,mine_like_contact,150,30,30,210,2.28%

@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  postgis:
+    image: postgis/postgis:15-3.3
+    container_name: sonar_intel_postgis
+    environment:
+      POSTGRES_DB: sonar_intel
+      POSTGRES_USER: sonar_user
+      POSTGRES_PASSWORD: sonar_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgis_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
+    restart: unless-stopped
+
+volumes:
+  postgis_data:

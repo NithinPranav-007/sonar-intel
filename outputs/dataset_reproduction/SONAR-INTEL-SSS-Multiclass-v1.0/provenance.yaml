@@ -1,0 +1,86 @@
+dataset_name: SONAR-INTEL-SSS-Multiclass-v1.0
+version: 1.0.0
+date_created: '2026-09-05'
+sources:
+- source_name: AI4Shipwrecks
+  repository_url: https://umfieldrobotics.github.io/ai4shipwrecks/
+  doi_or_citation: University of Michigan Field Robotics Group / NOAA Thunder Bay
+    National Marine Sanctuary
+  license: CC-BY-4.0
+  real_or_synthetic: REAL
+  sensor: AUV Side-Scan Sonar 450 kHz / 900 kHz
+  raw_swaths: 286
+  sites_count: 29
+  contributed_tiles: 8356
+  positive_tiles: 874
+  negative_tiles: 7482
+  contributed_objects: 1500
+  contributed_classes:
+  - shipwreck (2)
+  - negative_background (-1)
+  sampling_method: Full swath coverage, 640x640 tiling with 512 stride (20% overlap)
+  transformations: 'P4 Preprocessing: 1-99% Percentile Stretch -> Lee MMSE 5x5 ->
+    CLAHE (clip=2.0, grid=8x8)'
+- source_name: SubPipe
+  repository_url: https://github.com/remaro-network/SubPipe-dataset
+  doi_or_citation: REMARO Network / OceanScan-MST LAUV Sonar Pipeline Dataset
+  license: CC-BY-4.0
+  real_or_synthetic: REAL_DOMAIN_ADAPTED
+  sensor: LAUV Klein 3500 / Edgetech SSS 900 kHz
+  raw_samples: 1850
+  contributed_tiles: 210
+  positive_tiles: 210
+  negative_tiles: 0
+  contributed_objects: 210
+  contributed_classes:
+  - submarine_pipeline (1)
+  sampling_method: 150 train, 30 val, 30 test balanced anchor sampling
+  transformations: Acoustic background embedding + physical highlight/shadow modeling
+    + P4 Preprocessing
+- source_name: MILCO-NOMBO
+  repository_url: https://figshare.com/articles/dataset/Side-scan_sonar_imaging_for_Mine_detection/22819829
+  doi_or_citation: Teledyne Gavia AUV Side-Scan Sonar Mine Detection Dataset
+  license: CC-BY-4.0
+  real_or_synthetic: REAL_DOMAIN_ADAPTED
+  sensor: Teledyne Gavia SSS 900/1800 kHz
+  raw_samples: 1170
+  contributed_tiles: 210
+  positive_tiles: 210
+  negative_tiles: 0
+  contributed_objects: 210
+  contributed_classes:
+  - mine_like_contact (4)
+  sampling_method: 150 train, 30 val, 30 test balanced anchor sampling
+  transformations: Acoustic background embedding + physical highlight/shadow modeling
+    + P4 Preprocessing
+- source_name: GhostVision
+  repository_url: https://huggingface.co/datasets/PINGEcosystem/sss-crab-pot-detection-ds
+  doi_or_citation: PING Ecosystem Crab Pot Sonar Detection Dataset
+  license: MIT
+  real_or_synthetic: REAL_DOMAIN_ADAPTED
+  sensor: Humminbird Helix 455/800 kHz SSS
+  raw_samples: 6674
+  contributed_tiles: 210
+  positive_tiles: 210
+  negative_tiles: 0
+  contributed_objects: 210
+  contributed_classes:
+  - crab_pot (0)
+  sampling_method: 150 train, 30 val, 30 test balanced anchor sampling
+  transformations: Acoustic background embedding + physical highlight/shadow modeling
+    + P4 Preprocessing
+- source_name: GhostNetZero / DRISHTI
+  repository_url: https://huggingface.co/rehan9599/drishti-detector
+  doi_or_citation: DRISHTI Derelict Marine Debris Simulation Framework
+  license: OpenRAIL
+  real_or_synthetic: SYNTHETIC_ACOUSTIC_SIM
+  sensor: Synthetic 450/900 kHz Acoustic Simulation
+  raw_samples: 850
+  contributed_tiles: 210
+  positive_tiles: 210
+  negative_tiles: 0
+  contributed_objects: 210
+  contributed_classes:
+  - ghost_net (3)
+  sampling_method: 150 train, 30 val, 30 test balanced anchor sampling
+  transformations: Physical acoustic backscatter synthesis + P4 Preprocessing

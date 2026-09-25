@@ -1,0 +1,81 @@
+{
+  "dataset_name": "AI4Shipwrecks (Tiled 640x640)",
+  "positive_tiles_count": 887,
+  "negative_tiles_count": 7469,
+  "total_connected_components": 2237,
+  "average_components_per_positive_tile": 2.52,
+  "component_dimension_percentiles": {
+    "width": {
+      "P10": 8.6,
+      "P25": 18.0,
+      "P50": 42.0,
+      "P75": 116.0,
+      "P90": 225.4,
+      "P95": 339.6
+    },
+    "height": {
+      "P10": 10.0,
+      "P25": 19.0,
+      "P50": 41.0,
+      "P75": 104.0,
+      "P90": 259.0,
+      "P95": 401.0
+    },
+    "bbox_area": {
+      "P10": 99.6,
+      "P25": 400.0,
+      "P50": 1624.0,
+      "P75": 11616.0,
+      "P90": 53824.0,
+      "P95": 99543.6
+    },
+    "density": {
+      "P10": 0.2809,
+      "P25": 0.3946,
+      "P50": 0.54,
+      "P75": 0.6577,
+      "P90": 0.7557,
+      "P95": 0.8095
+    }
+  },
+  "tiny_component_distribution": {
+    "under_5px_count": 86,
+    "under_5px_pct": 3.84,
+    "under_10px_count": 327,
+    "under_10px_pct": 14.62,
+    "under_20px_count": 766,
+    "under_20px_pct": 34.24,
+    "under_32px_count": 1148,
+    "under_32px_pct": 51.32
+  },
+  "boundary_analysis": {
+    "components_touching_boundary_count": 1127,
+    "components_touching_boundary_pct": 50.38,
+    "touching_left": 380,
+    "touching_right": 397,
+    "touching_top": 344,
+    "touching_bottom": 355,
+    "positive_tiles_with_boundary_target_count": 728,
+    "positive_tiles_with_boundary_target_pct": 82.07
+  },
+  "merging_and_strategy_comparison": {
+    "strategy_a_separate_components": {
+      "description": "Every connected component produces an independent bounding box",
+      "total_boxes_produced": 2237,
+      "average_boxes_per_positive_tile": 2.52
+    },
+    "strategy_b_spatial_proximity_grouping": {
+      "description": "Components within 20px proximity merged into macro-regions",
+      "total_boxes_produced": 1675,
+      "average_boxes_per_positive_tile": 1.89,
+      "reduction_vs_strategy_a_pct": 25.12
+    },
+    "strategy_c_full_foreground_envelope": {
+      "description": "Single bounding box enclosing entire foreground in each positive tile",
+      "total_boxes_produced": 887,
+      "average_boxes_per_positive_tile": 1.0,
+      "reduction_vs_strategy_a_pct": 60.35
+    }
+  },
+  "domain_assessment": "Connected components in binary SSS segmentation masks represent acoustic highlight patches separated by interior shadow voids and structural decay, rather than separate ships. Strategy A produces excessive fragmented boxes (up to 44 boxes per tile) and fragments single hulls. Strategy B provides coherent acoustic grouping while respecting distinct debris fields. Strategy C over-generalizes disjoint debris clusters into bloated bounding boxes with low foreground density."
+}

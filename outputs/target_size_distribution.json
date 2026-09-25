@@ -1,0 +1,126 @@
+{
+  "dataset_name": "AI4Shipwrecks",
+  "dataset_root": "data/raw/AI4Shipwrecks",
+  "total_masks_inspected": 286,
+  "positive_images_count": 161,
+  "empty_masks_count": 125,
+  "total_foreground_regions": 994,
+  "average_components_per_positive_swath": 6.17,
+  "target_width_stats": {
+    "min": 1,
+    "median": 42.0,
+    "mean": 100.56,
+    "max": 822,
+    "std": 140.21,
+    "percentiles": {
+      "P10": 10.0,
+      "P25": 19.0,
+      "P50": 42.0,
+      "P75": 109.0,
+      "P90": 299.0,
+      "P95": 458.7
+    }
+  },
+  "target_height_stats": {
+    "min": 1,
+    "median": 41.0,
+    "mean": 114.93,
+    "max": 1450,
+    "std": 200.37,
+    "percentiles": {
+      "P10": 12.0,
+      "P25": 22.0,
+      "P50": 41.0,
+      "P75": 96.0,
+      "P90": 316.2,
+      "P95": 547.4
+    }
+  },
+  "bbox_area_stats": {
+    "min": 1,
+    "median": 1628.0,
+    "mean": 31500.28,
+    "max": 817699,
+    "percentiles": {
+      "P10": 137.2,
+      "P25": 493.0,
+      "P50": 1628.0,
+      "P75": 9924.0,
+      "P90": 78282.8,
+      "P95": 205562.7
+    }
+  },
+  "foreground_pixel_area_stats": {
+    "min": 1,
+    "median": 624.5,
+    "mean": 15039.42,
+    "max": 397206
+  },
+  "aspect_ratio_stats": {
+    "min": 0.075,
+    "median": 0.95,
+    "mean": 1.2,
+    "max": 7.0,
+    "percentiles": {
+      "P10": 0.37,
+      "P25": 0.61,
+      "P50": 0.95,
+      "P75": 1.47,
+      "P90": 2.19,
+      "P95": 3.01
+    }
+  },
+  "macro_swath_envelope_stats": {
+    "width": {
+      "min": 32,
+      "median": 556.0,
+      "mean": 730.44,
+      "max": 1727
+    },
+    "height": {
+      "min": 41,
+      "median": 628.0,
+      "mean": 871.81,
+      "max": 8643
+    }
+  },
+  "tile_candidate_coverage": {
+    "connected_components_coverage": {
+      "512": {
+        "components_fitted": 917,
+        "fit_percentage": 92.25
+      },
+      "640": {
+        "components_fitted": 949,
+        "fit_percentage": 95.47
+      },
+      "768": {
+        "components_fitted": 960,
+        "fit_percentage": 96.58
+      },
+      "1024": {
+        "components_fitted": 985,
+        "fit_percentage": 99.09
+      }
+    },
+    "macro_swath_envelopes_coverage": {
+      "512": {
+        "envelopes_fitted": 44,
+        "fit_percentage": 27.33
+      },
+      "640": {
+        "envelopes_fitted": 61,
+        "fit_percentage": 37.89
+      },
+      "768": {
+        "envelopes_fitted": 75,
+        "fit_percentage": 46.58
+      },
+      "1024": {
+        "envelopes_fitted": 99,
+        "fit_percentage": 61.49
+      }
+    }
+  },
+  "critical_limitations": "Connected components in binary sonar masks do NOT directly equal distinct physical objects. A single shipwreck often fragments into multiple connected components due to interior shadow voids, acoustic occlusions, structural decay, or scattered debris fields. Bounding-box statistics must be interpreted both at the individual component level and at the macro-envelope level."
+}

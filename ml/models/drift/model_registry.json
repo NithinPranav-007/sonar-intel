@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-09-07T12:26:36.160538+00:00",
+  "champion_model": "PHYSICS",
+  "champion_version": "glorys12v1-rk2-v1",
+  "models": {
+    "PHYSICS": {
+      "model_name": "PHYSICS",
+      "model_class": "PhysicsDriftEngine",
+      "version": "glorys12v1-rk2-v1",
+      "status": "champion",
+      "description": "Deterministic Lagrangian advection using Copernicus GLORYS12V1 ocean current vector field.",
+      "drift_mode": "SURFACE_DRIFT_MODE",
+      "input_variables": [
+        "uo",
+        "vo"
+      ],
+      "metrics": {
+        "24h_rmse_km": null,
+        "48h_rmse_km": null,
+        "72h_rmse_km": null,
+        "status": "INSUFFICIENT_VALIDATED_DATA"
+      },
+      "registered_at": "2026-09-07T12:26:36.160553+00:00"
+    },
+    "PHYSICS_GRU": {
+      "model_name": "PHYSICS_GRU",
+      "model_class": "DriftGRU",
+      "version": "gru-residual-v1",
+      "status": "candidate",
+      "description": "Physics baseline combined with 2-layer GRU residual error correction.",
+      "metrics": {
+        "24h_rmse_km": null,
+        "48h_rmse_km": null,
+        "72h_rmse_km": null,
+        "status": "NOT_TRAINED"
+      },
+      "registered_at": "2026-09-07T12:26:36.160556+00:00"
+    },
+    "PHYSICS_LSTM": {
+      "model_name": "PHYSICS_LSTM",
+      "model_class": "DriftLSTM",
+      "version": "lstm-residual-v1",
+      "status": "candidate",
+      "description": "Physics baseline combined with 2-layer LSTM residual error correction.",
+      "metrics": {
+        "24h_rmse_km": null,
+        "48h_rmse_km": null,
+        "72h_rmse_km": null,
+        "status": "NOT_TRAINED"
+      },
+      "registered_at": "2026-09-07T12:26:36.160559+00:00"
+    }
+  }
+}

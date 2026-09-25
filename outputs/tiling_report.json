@@ -1,0 +1,35 @@
+{
+  "dataset_name": "AI4Shipwrecks",
+  "dataset_root": "data/raw/AI4Shipwrecks",
+  "tile_configuration": {
+    "tile_size": 640,
+    "overlap_pct": 20.0,
+    "stride": 512,
+    "norm_p_low": 1.0,
+    "norm_p_high": 99.0,
+    "min_suitable_height": 64,
+    "padding_value": 0,
+    "compression": 1
+  },
+  "summary": {
+    "source_images_count": 286,
+    "unique_sites_count": 29,
+    "total_tiles_generated": 8356,
+    "positive_tiles_count": 887,
+    "negative_tiles_count": 7469,
+    "positive_tile_percentage": 10.62,
+    "padded_tiles_count": 3145,
+    "boundary_target_tiles_count": 728,
+    "training_unsuitable_tiles_count": 16
+  },
+  "reconstruction_test": {
+    "total_pixels": 4278528,
+    "covered_pixels": 4278528,
+    "uncovered_pixels": 0,
+    "coverage_percentage": 100.0,
+    "overlap_percentage": 38.31,
+    "reconstruction_passed": true
+  },
+  "validation_status": "ALL_ASSERTIONS_PASSED",
+  "provenance_and_leakage_policy": "Each tile strictly retains source_image, site_id, and source_split. Downstream train/val/test assignment MUST be conducted strictly at the site level to prevent spatial correlation leakage across overlapping tiles."
+}

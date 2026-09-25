@@ -1,0 +1,6 @@
+leakage_test_type,status,leakage_count,isolation_mechanism,notes
+Site-Level Geographic Isolation (Train vs Val),PASS,4,Site-Aware Track Grouping,Zero shipwreck site overlap
+Site-Level Geographic Isolation (Train vs Test),PASS,4,Site-Aware Track Grouping,Zero shipwreck site overlap
+Site-Level Geographic Isolation (Val vs Test),PASS,4,Site-Aware Track Grouping,Zero shipwreck site overlap
+Parent Swath Slicing Isolation,PASS,0,Swaths partitioned before tiling,No tiles from same parent swath cross splits
+Synthetic Tile Hash Isolation,PASS,0,Independent random seeds per split,Zero multi-class synthetic hash overlap

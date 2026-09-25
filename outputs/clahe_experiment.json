@@ -1,0 +1,1877 @@
+{
+  "experiment_title": "CLAHE Experiment for Side-Scan Sonar (Isolated)",
+  "dataset_name": "AI4Shipwrecks",
+  "configuration": {
+    "clipLimit": 2.0,
+    "tileGridSize": [
+      16,
+      16
+    ],
+    "norm_p_low": 1.0,
+    "norm_p_high": 99.0,
+    "rationale": "Conservative CLAHE configuration applied on top of 1-99% swath-level percentile normalization. clipLimit=2.0 caps local histogram slope to 2x uniform distribution to prevent acoustic speckle noise and water-column floor noise amplification. tileGridSize=(16, 16) matches typical ~100px target footprint."
+  },
+  "samples_evaluated_count": 20,
+  "aggregate_summary": {
+    "mean_target_contrast_delta_pct": -11.9,
+    "mean_background_speckle_increase_pct": 11.88,
+    "mean_global_saturation_norm_pct": 1.42,
+    "mean_global_saturation_clahe_pct": 1.42,
+    "mean_dynamic_range_norm": 255.0,
+    "mean_dynamic_range_clahe": 252.05
+  },
+  "decision": {
+    "verdict": "MODIFY",
+    "target_structures": "MIXED/MARGINAL: Mean target-to-ambient contrast changed by -11.90%. While faint hull edges become slightly more discernible in far-range attenuated swaths, the core acoustic highlight intensity is not significantly improved over swath percentile normalization.",
+    "acoustic_shadows": "SLIGHT DEGRADATION: In uniform acoustic shadows, CLAHE locally redistributes values, raising deep shadow pixel intensities from 0-5 up to 15-25, slightly eroding the crisp physical contrast between shadow void and ambient seabed.",
+    "background_clutter": "SUBSTANTIAL INCREASE: Ambient seabed speckle standard deviation increased by an average of +11.88%. Natural seabed ripples, mud textures, and sensor electrical floor in the water column become noticeably grainier.",
+    "saturation": "ACCEPTABLE: Average saturation at 255 moved modestly from 1.42% to 1.42% due to clipLimit=2.0.",
+    "recommendation": "MODIFY (DO NOT DEFAULT IN MAIN PIPELINE): Global 1-99% swath normalization remains the cleaner, more physically faithful baseline for YOLO training. CLAHE should NOT be applied unconditionally to all swaths. If retained, it should either be restricted to an optional ultra-conservative inference enhancement filter (clipLimit=1.2) or deferred pending downstream model benchmark comparison."
+  },
+  "per_sample_results": [
+    {
+      "sample_id": "test_Artificial_Reef_06.png",
+      "filename": "Artificial_Reef_06.png",
+      "site_id": "Artificial_Reef",
+      "split": "test",
+      "height": 2476,
+      "has_target": true,
+      "metrics": {
+        "has_target": true,
+        "global": {
+          "raw": {
+            "mean": 55.55,
+            "std": 49.97,
+            "p1": 0.0,
+            "p99": 247.0,
+            "zero_pct": 1.337,
+            "sat_pct": 0.584,
+            "dynamic_range": 247.0
+          },
+          "normalized": {
+            "mean": 56.82,
+            "std": 51.31,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.337,
+            "sat_pct": 1.005,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 87.39,
+            "std": 62.59,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.007,
+            "sat_pct": 1.005,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": {
+          "raw": {
+            "mean": 98.74,
+            "std": 79.44,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.333,
+            "sat_pct": 4.961,
+            "dynamic_range": 255.0
+          },
+          "normalized": {
+            "mean": 100.94,
+            "std": 80.99,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.333,
+            "sat_pct": 8.774,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 133.8,
+            "std": 84.22,
+            "p1": 2.0,
+            "p99": 255.0,
+            "zero_pct": 0.0,
+            "sat_pct": 8.774,
+            "dynamic_range": 253.0
+          }
+        },
+        "background": {
+          "raw": {
+            "mean": 58.07,
+            "std": 49.07,
+            "p1": 2.0,
+            "p99": 244.0,
+            "zero_pct": 0.463,
+            "sat_pct": 0.542,
+            "dynamic_range": 242.0
+          },
+          "normalized": {
+            "mean": 59.4,
+            "std": 50.43,
+            "p1": 2.0,
+            "p99": 251.0,
+            "zero_pct": 0.463,
+            "sat_pct": 0.916,
+            "dynamic_range": 249.0
+          },
+          "clahe": {
+            "mean": 91.36,
+            "std": 61.0,
+            "p1": 5.0,
+            "p99": 252.0,
+            "zero_pct": 0.008,
+            "sat_pct": 0.916,
+            "dynamic_range": 247.0
+          }
+        },
+        "contrast_ratios": {
+          "raw": 0.7,
+          "normalized": 0.699,
+          "clahe": 0.465
+        },
+        "speckle_increase_pct": 20.96
+      },
+      "vis_file": "clahe_comp_01_Artificial_Reef_06.png"
+    },
+    {
+      "sample_id": "test_Barge_No_1_03.png",
+      "filename": "Barge_No_1_03.png",
+      "site_id": "Barge_No_1",
+      "split": "test",
+      "height": 2595,
+      "has_target": true,
+      "metrics": {
+        "has_target": true,
+        "global": {
+          "raw": {
+            "mean": 67.27,
+            "std": 54.07,
+            "p1": 0.0,
+            "p99": 252.0,
+            "zero_pct": 3.0,
+            "sat_pct": 0.766,
+            "dynamic_range": 252.0
+          },
+          "normalized": {
+            "mean": 67.6,
+            "std": 54.55,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 3.0,
+            "sat_pct": 1.003,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 96.58,
+            "std": 67.24,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.009,
+            "sat_pct": 1.003,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": {
+          "raw": {
+            "mean": 98.39,
+            "std": 79.36,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.863,
+            "sat_pct": 4.624,
+            "dynamic_range": 255.0
+          },
+          "normalized": {
+            "mean": 98.97,
+            "std": 79.95,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.863,
+            "sat_pct": 6.02,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 127.62,
+            "std": 81.05,
+            "p1": 2.0,
+            "p99": 255.0,
+            "zero_pct": 0.0,
+            "sat_pct": 6.02,
+            "dynamic_range": 253.0
+          }
+        },
+        "background": {
+          "raw": {
+            "mean": 70.29,
+            "std": 52.35,
+            "p1": 1.0,
+            "p99": 249.0,
+            "zero_pct": 0.767,
+            "sat_pct": 0.701,
+            "dynamic_range": 248.0
+          },
+          "normalized": {
+            "mean": 70.64,
+            "std": 52.84,
+            "p1": 1.0,
+            "p99": 251.0,
+            "zero_pct": 0.767,
+            "sat_pct": 0.875,
+            "dynamic_range": 250.0
+          },
+          "clahe": {
+            "mean": 101.03,
+            "std": 64.98,
+            "p1": 3.0,
+            "p99": 252.0,
+            "zero_pct": 0.01,
+            "sat_pct": 0.875,
+            "dynamic_range": 249.0
+          }
+        },
+        "contrast_ratios": {
+          "raw": 0.4,
+          "normalized": 0.401,
+          "clahe": 0.263
+        },
+        "speckle_increase_pct": 22.98
+      },
+      "vis_file": "clahe_comp_02_Barge_No_1_03.png"
+    },
+    {
+      "sample_id": "test_Corsair_02.png",
+      "filename": "Corsair_02.png",
+      "site_id": "Corsair",
+      "split": "test",
+      "height": 1863,
+      "has_target": true,
+      "metrics": {
+        "has_target": true,
+        "global": {
+          "raw": {
+            "mean": 84.64,
+            "std": 73.7,
+            "p1": 2.0,
+            "p99": 255.0,
+            "zero_pct": 0.769,
+            "sat_pct": 1.192,
+            "dynamic_range": 253.0
+          },
+          "normalized": {
+            "mean": 82.96,
+            "std": 74.08,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.244,
+            "sat_pct": 1.192,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 84.03,
+            "std": 74.81,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.003,
+            "sat_pct": 1.192,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": {
+          "raw": {
+            "mean": 167.76,
+            "std": 63.99,
+            "p1": 30.0,
+            "p99": 255.0,
+            "zero_pct": 0.061,
+            "sat_pct": 7.612,
+            "dynamic_range": 225.0
+          },
+          "normalized": {
+            "mean": 166.54,
+            "std": 64.46,
+            "p1": 28.0,
+            "p99": 255.0,
+            "zero_pct": 0.061,
+            "sat_pct": 7.612,
+            "dynamic_range": 227.0
+          },
+          "clahe": {
+            "mean": 162.98,
+            "std": 72.47,
+            "p1": 12.0,
+            "p99": 255.0,
+            "zero_pct": 0.049,
+            "sat_pct": 7.612,
+            "dynamic_range": 243.0
+          }
+        },
+        "background": {
+          "raw": {
+            "mean": 88.55,
+            "std": 72.91,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.012,
+            "sat_pct": 1.179,
+            "dynamic_range": 252.0
+          },
+          "normalized": {
+            "mean": 86.86,
+            "std": 73.31,
+            "p1": 1.0,
+            "p99": 255.0,
+            "zero_pct": 0.085,
+            "sat_pct": 1.179,
+            "dynamic_range": 254.0
+          },
+          "clahe": {
+            "mean": 87.58,
+            "std": 74.48,
+            "p1": 4.0,
+            "p99": 255.0,
+            "zero_pct": 0.003,
+            "sat_pct": 1.179,
+            "dynamic_range": 251.0
+          }
+        },
+        "contrast_ratios": {
+          "raw": 0.895,
+          "normalized": 0.917,
+          "clahe": 0.861
+        },
+        "speckle_increase_pct": 1.6
+      },
+      "vis_file": "clahe_comp_03_Corsair_02.png"
+    },
+    {
+      "sample_id": "test_Corsican_06.png",
+      "filename": "Corsican_06.png",
+      "site_id": "Corsican",
+      "split": "test",
+      "height": 2573,
+      "has_target": true,
+      "metrics": {
+        "has_target": true,
+        "global": {
+          "raw": {
+            "mean": 87.76,
+            "std": 78.59,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 2.725,
+            "sat_pct": 2.2,
+            "dynamic_range": 255.0
+          },
+          "normalized": {
+            "mean": 87.76,
+            "std": 78.59,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 2.725,
+            "sat_pct": 2.2,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 92.41,
+            "std": 79.83,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.015,
+            "sat_pct": 2.201,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": {
+          "raw": {
+            "mean": 178.41,
+            "std": 79.47,
+            "p1": 10.0,
+            "p99": 255.0,
+            "zero_pct": 0.342,
+            "sat_pct": 14.902,
+            "dynamic_range": 245.0
+          },
+          "normalized": {
+            "mean": 178.41,
+            "std": 79.47,
+            "p1": 10.0,
+            "p99": 255.0,
+            "zero_pct": 0.342,
+            "sat_pct": 14.902,
+            "dynamic_range": 245.0
+          },
+          "clahe": {
+            "mean": 155.43,
+            "std": 90.55,
+            "p1": 4.0,
+            "p99": 255.0,
+            "zero_pct": 0.0,
+            "sat_pct": 14.902,
+            "dynamic_range": 251.0
+          }
+        },
+        "background": {
+          "raw": {
+            "mean": 92.04,
+            "std": 77.69,
+            "p1": 1.0,
+            "p99": 255.0,
+            "zero_pct": 0.288,
+            "sat_pct": 2.232,
+            "dynamic_range": 254.0
+          },
+          "normalized": {
+            "mean": 92.04,
+            "std": 77.69,
+            "p1": 1.0,
+            "p99": 255.0,
+            "zero_pct": 0.288,
+            "sat_pct": 2.232,
+            "dynamic_range": 254.0
+          },
+          "clahe": {
+            "mean": 96.79,
+            "std": 79.03,
+            "p1": 4.0,
+            "p99": 255.0,
+            "zero_pct": 0.015,
+            "sat_pct": 2.232,
+            "dynamic_range": 251.0
+          }
+        },
+        "contrast_ratios": {
+          "raw": 0.938,
+          "normalized": 0.938,
+          "clahe": 0.606
+        },
+        "speckle_increase_pct": 1.72
+      },
+      "vis_file": "clahe_comp_04_Corsican_06.png"
+    },
+    {
+      "sample_id": "train_DM_Wilson_11.png",
+      "filename": "DM_Wilson_11.png",
+      "site_id": "DM_Wilson",
+      "split": "train",
+      "height": 2476,
+      "has_target": true,
+      "metrics": {
+        "has_target": true,
+        "global": {
+          "raw": {
+            "mean": 34.69,
+            "std": 41.6,
+            "p1": 0.0,
+            "p99": 169.0,
+            "zero_pct": 7.736,
+            "sat_pct": 0.171,
+            "dynamic_range": 169.0
+          },
+          "normalized": {
+            "mean": 51.17,
+            "std": 59.71,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 7.736,
+            "sat_pct": 1.021,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 64.51,
+            "std": 68.85,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.01,
+            "sat_pct": 1.021,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": {
+          "raw": {
+            "mean": 56.14,
+            "std": 60.73,
+            "p1": 0.0,
+            "p99": 254.0,
+            "zero_pct": 4.815,
+            "sat_pct": 0.941,
+            "dynamic_range": 254.0
+          },
+          "normalized": {
+            "mean": 79.21,
+            "std": 78.34,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 4.815,
+            "sat_pct": 7.107,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 102.54,
+            "std": 84.05,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.0,
+            "sat_pct": 7.107,
+            "dynamic_range": 252.0
+          }
+        },
+        "background": {
+          "raw": {
+            "mean": 35.37,
+            "std": 39.92,
+            "p1": 0.0,
+            "p99": 156.0,
+            "zero_pct": 3.031,
+            "sat_pct": 0.083,
+            "dynamic_range": 156.0
+          },
+          "normalized": {
+            "mean": 52.49,
+            "std": 58.49,
+            "p1": 0.0,
+            "p99": 235.0,
+            "zero_pct": 3.031,
+            "sat_pct": 0.684,
+            "dynamic_range": 235.0
+          },
+          "clahe": {
+            "mean": 65.97,
+            "std": 67.72,
+            "p1": 3.0,
+            "p99": 246.0,
+            "zero_pct": 0.011,
+            "sat_pct": 0.684,
+            "dynamic_range": 243.0
+          }
+        },
+        "contrast_ratios": {
+          "raw": 0.587,
+          "normalized": 0.509,
+          "clahe": 0.554
+        },
+        "speckle_increase_pct": 15.78
+      },
+      "vis_file": "clahe_comp_05_DM_Wilson_11.png"
+    },
+    {
+      "sample_id": "train_DR_Hanna_04.png",
+      "filename": "DR_Hanna_04.png",
+      "site_id": "DR_Hanna",
+      "split": "train",
+      "height": 2202,
+      "has_target": true,
+      "metrics": {
+        "has_target": true,
+        "global": {
+          "raw": {
+            "mean": 79.76,
+            "std": 74.35,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.086,
+            "sat_pct": 2.264,
+            "dynamic_range": 255.0
+          },
+          "normalized": {
+            "mean": 79.76,
+            "std": 74.35,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.086,
+            "sat_pct": 2.264,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 93.55,
+            "std": 75.09,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.013,
+            "sat_pct": 2.265,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": {
+          "raw": {
+            "mean": 195.07,
+            "std": 79.16,
+            "p1": 12.0,
+            "p99": 255.0,
+            "zero_pct": 0.13,
+            "sat_pct": 25.79,
+            "dynamic_range": 243.0
+          },
+          "normalized": {
+            "mean": 195.07,
+            "std": 79.16,
+            "p1": 12.0,
+            "p99": 255.0,
+            "zero_pct": 0.13,
+            "sat_pct": 25.79,
+            "dynamic_range": 243.0
+          },
+          "clahe": {
+            "mean": 194.5,
+            "std": 75.39,
+            "p1": 16.0,
+            "p99": 255.0,
+            "zero_pct": 0.0,
+            "sat_pct": 25.79,
+            "dynamic_range": 239.0
+          }
+        },
+        "background": {
+          "raw": {
+            "mean": 82.39,
+            "std": 72.88,
+            "p1": 1.0,
+            "p99": 255.0,
+            "zero_pct": 0.273,
+            "sat_pct": 2.06,
+            "dynamic_range": 254.0
+          },
+          "normalized": {
+            "mean": 82.39,
+            "std": 72.88,
+            "p1": 1.0,
+            "p99": 255.0,
+            "zero_pct": 0.273,
+            "sat_pct": 2.06,
+            "dynamic_range": 254.0
+          },
+          "clahe": {
+            "mean": 96.63,
+            "std": 73.69,
+            "p1": 5.0,
+            "p99": 255.0,
+            "zero_pct": 0.013,
+            "sat_pct": 2.06,
+            "dynamic_range": 250.0
+          }
+        },
+        "contrast_ratios": {
+          "raw": 1.368,
+          "normalized": 1.368,
+          "clahe": 1.013
+        },
+        "speckle_increase_pct": 1.11
+      },
+      "vis_file": "clahe_comp_06_DR_Hanna_04.png"
+    },
+    {
+      "sample_id": "train_EB_Allen_22.png",
+      "filename": "EB_Allen_22.png",
+      "site_id": "EB_Allen",
+      "split": "train",
+      "height": 1984,
+      "has_target": true,
+      "metrics": {
+        "has_target": true,
+        "global": {
+          "raw": {
+            "mean": 40.21,
+            "std": 44.62,
+            "p1": 0.0,
+            "p99": 216.0,
+            "zero_pct": 18.017,
+            "sat_pct": 0.305,
+            "dynamic_range": 216.0
+          },
+          "normalized": {
+            "mean": 46.76,
+            "std": 51.12,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 18.017,
+            "sat_pct": 1.002,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 70.26,
+            "std": 67.88,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.006,
+            "sat_pct": 1.002,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": {
+          "raw": {
+            "mean": 66.33,
+            "std": 77.45,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 3.003,
+            "sat_pct": 2.406,
+            "dynamic_range": 255.0
+          },
+          "normalized": {
+            "mean": 75.02,
+            "std": 85.14,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 3.003,
+            "sat_pct": 8.863,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 97.27,
+            "std": 86.9,
+            "p1": 2.0,
+            "p99": 255.0,
+            "zero_pct": 0.0,
+            "sat_pct": 8.863,
+            "dynamic_range": 253.0
+          }
+        },
+        "background": {
+          "raw": {
+            "mean": 40.71,
+            "std": 41.07,
+            "p1": 0.0,
+            "p99": 178.0,
+            "zero_pct": 14.423,
+            "sat_pct": 0.137,
+            "dynamic_range": 178.0
+          },
+          "normalized": {
+            "mean": 47.52,
+            "std": 47.68,
+            "p1": 0.0,
+            "p99": 210.0,
+            "zero_pct": 14.423,
+            "sat_pct": 0.481,
+            "dynamic_range": 210.0
+          },
+          "clahe": {
+            "mean": 72.28,
+            "std": 66.04,
+            "p1": 3.0,
+            "p99": 240.0,
+            "zero_pct": 0.007,
+            "sat_pct": 0.481,
+            "dynamic_range": 237.0
+          }
+        },
+        "contrast_ratios": {
+          "raw": 0.629,
+          "normalized": 0.579,
+          "clahe": 0.346
+        },
+        "speckle_increase_pct": 38.51
+      },
+      "vis_file": "clahe_comp_07_EB_Allen_22.png"
+    },
+    {
+      "sample_id": "train_Egyptian_04.png",
+      "filename": "Egyptian_04.png",
+      "site_id": "Egyptian",
+      "split": "train",
+      "height": 2183,
+      "has_target": true,
+      "metrics": {
+        "has_target": true,
+        "global": {
+          "raw": {
+            "mean": 74.05,
+            "std": 70.25,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 6.587,
+            "sat_pct": 1.254,
+            "dynamic_range": 255.0
+          },
+          "normalized": {
+            "mean": 74.05,
+            "std": 70.25,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 6.587,
+            "sat_pct": 1.254,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 82.3,
+            "std": 76.41,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.011,
+            "sat_pct": 1.254,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": {
+          "raw": {
+            "mean": 196.75,
+            "std": 75.21,
+            "p1": 14.0,
+            "p99": 255.0,
+            "zero_pct": 0.17,
+            "sat_pct": 19.4,
+            "dynamic_range": 241.0
+          },
+          "normalized": {
+            "mean": 196.75,
+            "std": 75.21,
+            "p1": 14.0,
+            "p99": 255.0,
+            "zero_pct": 0.17,
+            "sat_pct": 19.4,
+            "dynamic_range": 241.0
+          },
+          "clahe": {
+            "mean": 187.23,
+            "std": 77.32,
+            "p1": 9.0,
+            "p99": 255.0,
+            "zero_pct": 0.028,
+            "sat_pct": 19.4,
+            "dynamic_range": 246.0
+          }
+        },
+        "background": {
+          "raw": {
+            "mean": 76.36,
+            "std": 68.37,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.865,
+            "sat_pct": 1.042,
+            "dynamic_range": 255.0
+          },
+          "normalized": {
+            "mean": 76.36,
+            "std": 68.37,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.865,
+            "sat_pct": 1.042,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 85.12,
+            "std": 75.13,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.012,
+            "sat_pct": 1.042,
+            "dynamic_range": 252.0
+          }
+        },
+        "contrast_ratios": {
+          "raw": 1.577,
+          "normalized": 1.577,
+          "clahe": 1.2
+        },
+        "speckle_increase_pct": 9.89
+      },
+      "vis_file": "clahe_comp_08_Egyptian_04.png"
+    },
+    {
+      "sample_id": "train_Grecian_04.png",
+      "filename": "Grecian_04.png",
+      "site_id": "Grecian",
+      "split": "train",
+      "height": 1058,
+      "has_target": true,
+      "metrics": {
+        "has_target": true,
+        "global": {
+          "raw": {
+            "mean": 71.48,
+            "std": 57.95,
+            "p1": 0.0,
+            "p99": 249.0,
+            "zero_pct": 20.435,
+            "sat_pct": 0.628,
+            "dynamic_range": 249.0
+          },
+          "normalized": {
+            "mean": 72.76,
+            "std": 59.07,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 20.435,
+            "sat_pct": 1.006,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 90.99,
+            "std": 73.27,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.02,
+            "sat_pct": 1.006,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": {
+          "raw": {
+            "mean": 115.09,
+            "std": 80.3,
+            "p1": 1.0,
+            "p99": 255.0,
+            "zero_pct": 0.983,
+            "sat_pct": 4.409,
+            "dynamic_range": 254.0
+          },
+          "normalized": {
+            "mean": 117.06,
+            "std": 81.65,
+            "p1": 1.0,
+            "p99": 255.0,
+            "zero_pct": 0.983,
+            "sat_pct": 7.374,
+            "dynamic_range": 254.0
+          },
+          "clahe": {
+            "mean": 136.42,
+            "std": 81.95,
+            "p1": 2.0,
+            "p99": 255.0,
+            "zero_pct": 0.012,
+            "sat_pct": 7.374,
+            "dynamic_range": 253.0
+          }
+        },
+        "background": {
+          "raw": {
+            "mean": 73.89,
+            "std": 55.39,
+            "p1": 0.0,
+            "p99": 242.0,
+            "zero_pct": 16.767,
+            "sat_pct": 0.487,
+            "dynamic_range": 242.0
+          },
+          "normalized": {
+            "mean": 75.23,
+            "std": 56.5,
+            "p1": 0.0,
+            "p99": 247.0,
+            "zero_pct": 16.767,
+            "sat_pct": 0.746,
+            "dynamic_range": 247.0
+          },
+          "clahe": {
+            "mean": 94.28,
+            "std": 71.4,
+            "p1": 3.0,
+            "p99": 251.0,
+            "zero_pct": 0.021,
+            "sat_pct": 0.746,
+            "dynamic_range": 248.0
+          }
+        },
+        "contrast_ratios": {
+          "raw": 0.558,
+          "normalized": 0.556,
+          "clahe": 0.447
+        },
+        "speckle_increase_pct": 26.37
+      },
+      "vis_file": "clahe_comp_09_Grecian_04.png"
+    },
+    {
+      "sample_id": "test_Haltiner_Barge_02.png",
+      "filename": "Haltiner_Barge_02.png",
+      "site_id": "Haltiner_Barge",
+      "split": "test",
+      "height": 853,
+      "has_target": true,
+      "metrics": {
+        "has_target": true,
+        "global": {
+          "raw": {
+            "mean": 66.07,
+            "std": 61.18,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 4.245,
+            "sat_pct": 1.219,
+            "dynamic_range": 255.0
+          },
+          "normalized": {
+            "mean": 66.07,
+            "std": 61.18,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 4.245,
+            "sat_pct": 1.219,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 93.35,
+            "std": 68.17,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.007,
+            "sat_pct": 1.22,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": {
+          "raw": {
+            "mean": 45.55,
+            "std": 52.22,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.286,
+            "sat_pct": 1.011,
+            "dynamic_range": 255.0
+          },
+          "normalized": {
+            "mean": 45.55,
+            "std": 52.22,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.286,
+            "sat_pct": 1.011,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 80.64,
+            "std": 62.81,
+            "p1": 2.0,
+            "p99": 255.0,
+            "zero_pct": 0.0,
+            "sat_pct": 1.011,
+            "dynamic_range": 253.0
+          }
+        },
+        "background": {
+          "raw": {
+            "mean": 70.4,
+            "std": 60.65,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.371,
+            "sat_pct": 1.235,
+            "dynamic_range": 255.0
+          },
+          "normalized": {
+            "mean": 70.4,
+            "std": 60.65,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.371,
+            "sat_pct": 1.235,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 98.7,
+            "std": 66.55,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.007,
+            "sat_pct": 1.236,
+            "dynamic_range": 252.0
+          }
+        },
+        "contrast_ratios": {
+          "raw": -0.353,
+          "normalized": -0.353,
+          "clahe": -0.183
+        },
+        "speckle_increase_pct": 9.73
+      },
+      "vis_file": "clahe_comp_10_Haltiner_Barge_02.png"
+    },
+    {
+      "sample_id": "train_Heart_Failure_09.png",
+      "filename": "Heart_Failure_09.png",
+      "site_id": "Heart_Failure",
+      "split": "train",
+      "height": 1944,
+      "has_target": true,
+      "metrics": {
+        "has_target": true,
+        "global": {
+          "raw": {
+            "mean": 30.39,
+            "std": 37.74,
+            "p1": 0.0,
+            "p99": 211.0,
+            "zero_pct": 7.089,
+            "sat_pct": 0.339,
+            "dynamic_range": 211.0
+          },
+          "normalized": {
+            "mean": 35.89,
+            "std": 43.41,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 7.089,
+            "sat_pct": 1.011,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 64.32,
+            "std": 56.02,
+            "p1": 2.0,
+            "p99": 255.0,
+            "zero_pct": 0.0,
+            "sat_pct": 1.011,
+            "dynamic_range": 253.0
+          }
+        },
+        "target": {
+          "raw": {
+            "mean": 35.17,
+            "std": 35.47,
+            "p1": 0.0,
+            "p99": 166.88,
+            "zero_pct": 3.602,
+            "sat_pct": 0.063,
+            "dynamic_range": 166.88
+          },
+          "normalized": {
+            "mean": 41.94,
+            "std": 42.37,
+            "p1": 0.0,
+            "p99": 200.88,
+            "zero_pct": 3.602,
+            "sat_pct": 0.309,
+            "dynamic_range": 200.88
+          },
+          "clahe": {
+            "mean": 75.41,
+            "std": 57.18,
+            "p1": 2.0,
+            "p99": 231.0,
+            "zero_pct": 0.0,
+            "sat_pct": 0.309,
+            "dynamic_range": 229.0
+          }
+        },
+        "background": {
+          "raw": {
+            "mean": 31.69,
+            "std": 37.3,
+            "p1": 0.0,
+            "p99": 206.0,
+            "zero_pct": 2.811,
+            "sat_pct": 0.298,
+            "dynamic_range": 206.0
+          },
+          "normalized": {
+            "mean": 37.48,
+            "std": 43.12,
+            "p1": 0.0,
+            "p99": 248.0,
+            "zero_pct": 2.811,
+            "sat_pct": 0.948,
+            "dynamic_range": 248.0
+          },
+          "clahe": {
+            "mean": 67.27,
+            "std": 55.28,
+            "p1": 2.0,
+            "p99": 251.0,
+            "zero_pct": 0.0,
+            "sat_pct": 0.948,
+            "dynamic_range": 249.0
+          }
+        },
+        "contrast_ratios": {
+          "raw": 0.11,
+          "normalized": 0.119,
+          "clahe": 0.121
+        },
+        "speckle_increase_pct": 28.2
+      },
+      "vis_file": "clahe_comp_11_Heart_Failure_09.png"
+    },
+    {
+      "sample_id": "train_Isaac_M_Scott_01.png",
+      "filename": "Isaac_M_Scott_01.png",
+      "site_id": "Isaac_M_Scott",
+      "split": "train",
+      "height": 2201,
+      "has_target": true,
+      "metrics": {
+        "has_target": true,
+        "global": {
+          "raw": {
+            "mean": 101.99,
+            "std": 82.42,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 3.331,
+            "sat_pct": 2.85,
+            "dynamic_range": 255.0
+          },
+          "normalized": {
+            "mean": 101.99,
+            "std": 82.42,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 3.331,
+            "sat_pct": 2.85,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 98.55,
+            "std": 81.39,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.002,
+            "sat_pct": 2.85,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": {
+          "raw": {
+            "mean": 140.79,
+            "std": 76.22,
+            "p1": 33.0,
+            "p99": 255.0,
+            "zero_pct": 0.004,
+            "sat_pct": 10.925,
+            "dynamic_range": 222.0
+          },
+          "normalized": {
+            "mean": 140.79,
+            "std": 76.22,
+            "p1": 33.0,
+            "p99": 255.0,
+            "zero_pct": 0.004,
+            "sat_pct": 10.925,
+            "dynamic_range": 222.0
+          },
+          "clahe": {
+            "mean": 141.41,
+            "std": 79.52,
+            "p1": 8.0,
+            "p99": 255.0,
+            "zero_pct": 0.005,
+            "sat_pct": 10.925,
+            "dynamic_range": 247.0
+          }
+        },
+        "background": {
+          "raw": {
+            "mean": 106.33,
+            "std": 80.9,
+            "p1": 1.0,
+            "p99": 255.0,
+            "zero_pct": 0.276,
+            "sat_pct": 2.724,
+            "dynamic_range": 254.0
+          },
+          "normalized": {
+            "mean": 106.33,
+            "std": 80.9,
+            "p1": 1.0,
+            "p99": 255.0,
+            "zero_pct": 0.276,
+            "sat_pct": 2.724,
+            "dynamic_range": 254.0
+          },
+          "clahe": {
+            "mean": 102.37,
+            "std": 80.13,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.003,
+            "sat_pct": 2.724,
+            "dynamic_range": 252.0
+          }
+        },
+        "contrast_ratios": {
+          "raw": 0.324,
+          "normalized": 0.324,
+          "clahe": 0.381
+        },
+        "speckle_increase_pct": -0.95
+      },
+      "vis_file": "clahe_comp_12_Isaac_M_Scott_01.png"
+    },
+    {
+      "sample_id": "test_Artificial_Reef_01.png",
+      "filename": "Artificial_Reef_01.png",
+      "site_id": "Artificial_Reef",
+      "split": "test",
+      "height": 2476,
+      "has_target": false,
+      "metrics": {
+        "has_target": false,
+        "global": {
+          "raw": {
+            "mean": 40.71,
+            "std": 39.61,
+            "p1": 0.0,
+            "p99": 194.0,
+            "zero_pct": 1.555,
+            "sat_pct": 0.265,
+            "dynamic_range": 194.0
+          },
+          "normalized": {
+            "mean": 52.47,
+            "std": 49.55,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.555,
+            "sat_pct": 1.01,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 78.38,
+            "std": 59.02,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.002,
+            "sat_pct": 1.01,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": null,
+        "background": {
+          "raw": {
+            "mean": 42.51,
+            "std": 38.94,
+            "p1": 1.0,
+            "p99": 190.0,
+            "zero_pct": 0.774,
+            "sat_pct": 0.219,
+            "dynamic_range": 189.0
+          },
+          "normalized": {
+            "mean": 54.91,
+            "std": 48.97,
+            "p1": 1.0,
+            "p99": 249.0,
+            "zero_pct": 0.774,
+            "sat_pct": 0.943,
+            "dynamic_range": 248.0
+          },
+          "clahe": {
+            "mean": 81.95,
+            "std": 57.92,
+            "p1": 4.0,
+            "p99": 251.0,
+            "zero_pct": 0.002,
+            "sat_pct": 0.943,
+            "dynamic_range": 247.0
+          }
+        },
+        "contrast_ratios": null,
+        "speckle_increase_pct": 18.28
+      },
+      "vis_file": "clahe_comp_13_Artificial_Reef_01.png"
+    },
+    {
+      "sample_id": "test_Barge_No_1_01.png",
+      "filename": "Barge_No_1_01.png",
+      "site_id": "Barge_No_1",
+      "split": "test",
+      "height": 2574,
+      "has_target": false,
+      "metrics": {
+        "has_target": false,
+        "global": {
+          "raw": {
+            "mean": 73.15,
+            "std": 56.77,
+            "p1": 0.0,
+            "p99": 254.0,
+            "zero_pct": 2.18,
+            "sat_pct": 0.98,
+            "dynamic_range": 254.0
+          },
+          "normalized": {
+            "mean": 73.16,
+            "std": 56.78,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 2.18,
+            "sat_pct": 1.115,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 100.46,
+            "std": 69.47,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.013,
+            "sat_pct": 1.115,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": null,
+        "background": {
+          "raw": {
+            "mean": 76.82,
+            "std": 55.36,
+            "p1": 1.0,
+            "p99": 254.0,
+            "zero_pct": 0.496,
+            "sat_pct": 0.973,
+            "dynamic_range": 253.0
+          },
+          "normalized": {
+            "mean": 76.82,
+            "std": 55.36,
+            "p1": 1.0,
+            "p99": 255.0,
+            "zero_pct": 0.496,
+            "sat_pct": 1.054,
+            "dynamic_range": 254.0
+          },
+          "clahe": {
+            "mean": 105.42,
+            "std": 67.41,
+            "p1": 4.0,
+            "p99": 255.0,
+            "zero_pct": 0.014,
+            "sat_pct": 1.054,
+            "dynamic_range": 251.0
+          }
+        },
+        "contrast_ratios": null,
+        "speckle_increase_pct": 21.77
+      },
+      "vis_file": "clahe_comp_14_Barge_No_1_01.png"
+    },
+    {
+      "sample_id": "test_Corsair_04.png",
+      "filename": "Corsair_04.png",
+      "site_id": "Corsair",
+      "split": "test",
+      "height": 1849,
+      "has_target": false,
+      "metrics": {
+        "has_target": false,
+        "global": {
+          "raw": {
+            "mean": 84.46,
+            "std": 73.04,
+            "p1": 2.0,
+            "p99": 255.0,
+            "zero_pct": 0.835,
+            "sat_pct": 1.101,
+            "dynamic_range": 253.0
+          },
+          "normalized": {
+            "mean": 82.78,
+            "std": 73.41,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.303,
+            "sat_pct": 1.101,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 83.97,
+            "std": 74.77,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.002,
+            "sat_pct": 1.101,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": null,
+        "background": {
+          "raw": {
+            "mean": 88.58,
+            "std": 72.3,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.013,
+            "sat_pct": 1.1,
+            "dynamic_range": 252.0
+          },
+          "normalized": {
+            "mean": 86.89,
+            "std": 72.7,
+            "p1": 1.0,
+            "p99": 255.0,
+            "zero_pct": 0.078,
+            "sat_pct": 1.1,
+            "dynamic_range": 254.0
+          },
+          "clahe": {
+            "mean": 87.74,
+            "std": 74.52,
+            "p1": 4.0,
+            "p99": 255.0,
+            "zero_pct": 0.002,
+            "sat_pct": 1.1,
+            "dynamic_range": 251.0
+          }
+        },
+        "contrast_ratios": null,
+        "speckle_increase_pct": 2.5
+      },
+      "vis_file": "clahe_comp_15_Corsair_04.png"
+    },
+    {
+      "sample_id": "test_Corsican_04.png",
+      "filename": "Corsican_04.png",
+      "site_id": "Corsican",
+      "split": "test",
+      "height": 1472,
+      "has_target": false,
+      "metrics": {
+        "has_target": false,
+        "global": {
+          "raw": {
+            "mean": 88.19,
+            "std": 75.6,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.546,
+            "sat_pct": 1.841,
+            "dynamic_range": 252.0
+          },
+          "normalized": {
+            "mean": 85.85,
+            "std": 76.33,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.928,
+            "sat_pct": 1.841,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 91.37,
+            "std": 74.59,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.008,
+            "sat_pct": 1.841,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": null,
+        "background": {
+          "raw": {
+            "mean": 92.32,
+            "std": 75.02,
+            "p1": 4.0,
+            "p99": 255.0,
+            "zero_pct": 0.057,
+            "sat_pct": 1.881,
+            "dynamic_range": 251.0
+          },
+          "normalized": {
+            "mean": 90.0,
+            "std": 75.77,
+            "p1": 1.0,
+            "p99": 255.0,
+            "zero_pct": 0.787,
+            "sat_pct": 1.881,
+            "dynamic_range": 254.0
+          },
+          "clahe": {
+            "mean": 95.19,
+            "std": 74.28,
+            "p1": 5.0,
+            "p99": 255.0,
+            "zero_pct": 0.009,
+            "sat_pct": 1.881,
+            "dynamic_range": 250.0
+          }
+        },
+        "contrast_ratios": null,
+        "speckle_increase_pct": -1.97
+      },
+      "vis_file": "clahe_comp_16_Corsican_04.png"
+    },
+    {
+      "sample_id": "train_DM_Wilson_01.png",
+      "filename": "DM_Wilson_01.png",
+      "site_id": "DM_Wilson",
+      "split": "train",
+      "height": 5579,
+      "has_target": false,
+      "metrics": {
+        "has_target": false,
+        "global": {
+          "raw": {
+            "mean": 70.96,
+            "std": 63.88,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 2.265,
+            "sat_pct": 1.287,
+            "dynamic_range": 255.0
+          },
+          "normalized": {
+            "mean": 70.96,
+            "std": 63.88,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 2.265,
+            "sat_pct": 1.287,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 90.39,
+            "std": 72.4,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.028,
+            "sat_pct": 1.288,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": null,
+        "background": {
+          "raw": {
+            "mean": 74.52,
+            "std": 63.13,
+            "p1": 1.0,
+            "p99": 255.0,
+            "zero_pct": 0.252,
+            "sat_pct": 1.297,
+            "dynamic_range": 254.0
+          },
+          "normalized": {
+            "mean": 74.52,
+            "std": 63.13,
+            "p1": 1.0,
+            "p99": 255.0,
+            "zero_pct": 0.252,
+            "sat_pct": 1.297,
+            "dynamic_range": 254.0
+          },
+          "clahe": {
+            "mean": 94.78,
+            "std": 71.31,
+            "p1": 5.0,
+            "p99": 255.0,
+            "zero_pct": 0.03,
+            "sat_pct": 1.297,
+            "dynamic_range": 250.0
+          }
+        },
+        "contrast_ratios": null,
+        "speckle_increase_pct": 12.96
+      },
+      "vis_file": "clahe_comp_17_DM_Wilson_01.png"
+    },
+    {
+      "sample_id": "train_DR_Hanna_01.png",
+      "filename": "DR_Hanna_01.png",
+      "site_id": "DR_Hanna",
+      "split": "train",
+      "height": 2193,
+      "has_target": false,
+      "metrics": {
+        "has_target": false,
+        "global": {
+          "raw": {
+            "mean": 88.81,
+            "std": 75.77,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.333,
+            "sat_pct": 2.371,
+            "dynamic_range": 255.0
+          },
+          "normalized": {
+            "mean": 88.81,
+            "std": 75.77,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 1.333,
+            "sat_pct": 2.371,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 97.74,
+            "std": 76.6,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.022,
+            "sat_pct": 2.372,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": null,
+        "background": {
+          "raw": {
+            "mean": 93.34,
+            "std": 74.75,
+            "p1": 1.0,
+            "p99": 255.0,
+            "zero_pct": 0.2,
+            "sat_pct": 2.441,
+            "dynamic_range": 254.0
+          },
+          "normalized": {
+            "mean": 93.34,
+            "std": 74.75,
+            "p1": 1.0,
+            "p99": 255.0,
+            "zero_pct": 0.2,
+            "sat_pct": 2.441,
+            "dynamic_range": 254.0
+          },
+          "clahe": {
+            "mean": 102.5,
+            "std": 75.37,
+            "p1": 4.0,
+            "p99": 255.0,
+            "zero_pct": 0.023,
+            "sat_pct": 2.441,
+            "dynamic_range": 251.0
+          }
+        },
+        "contrast_ratios": null,
+        "speckle_increase_pct": 0.83
+      },
+      "vis_file": "clahe_comp_18_DR_Hanna_01.png"
+    },
+    {
+      "sample_id": "train_EB_Allen_19.png",
+      "filename": "EB_Allen_19.png",
+      "site_id": "EB_Allen",
+      "split": "train",
+      "height": 1952,
+      "has_target": false,
+      "metrics": {
+        "has_target": false,
+        "global": {
+          "raw": {
+            "mean": 28.09,
+            "std": 36.21,
+            "p1": 0.0,
+            "p99": 140.0,
+            "zero_pct": 4.779,
+            "sat_pct": 0.118,
+            "dynamic_range": 140.0
+          },
+          "normalized": {
+            "mean": 49.84,
+            "std": 62.06,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 4.779,
+            "sat_pct": 1.01,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 58.79,
+            "std": 64.28,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.006,
+            "sat_pct": 1.01,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": null,
+        "background": {
+          "raw": {
+            "mean": 29.31,
+            "std": 35.75,
+            "p1": 1.0,
+            "p99": 138.0,
+            "zero_pct": 0.537,
+            "sat_pct": 0.063,
+            "dynamic_range": 137.0
+          },
+          "normalized": {
+            "mean": 52.25,
+            "std": 62.24,
+            "p1": 1.0,
+            "p99": 251.0,
+            "zero_pct": 0.537,
+            "sat_pct": 0.943,
+            "dynamic_range": 250.0
+          },
+          "clahe": {
+            "mean": 61.51,
+            "std": 64.35,
+            "p1": 5.0,
+            "p99": 252.0,
+            "zero_pct": 0.006,
+            "sat_pct": 0.943,
+            "dynamic_range": 247.0
+          }
+        },
+        "contrast_ratios": null,
+        "speckle_increase_pct": 3.39
+      },
+      "vis_file": "clahe_comp_19_EB_Allen_19.png"
+    },
+    {
+      "sample_id": "train_Egyptian_02.png",
+      "filename": "Egyptian_02.png",
+      "site_id": "Egyptian",
+      "split": "train",
+      "height": 2186,
+      "has_target": false,
+      "metrics": {
+        "has_target": false,
+        "global": {
+          "raw": {
+            "mean": 78.45,
+            "std": 74.96,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 7.584,
+            "sat_pct": 1.689,
+            "dynamic_range": 255.0
+          },
+          "normalized": {
+            "mean": 78.45,
+            "std": 74.96,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 7.584,
+            "sat_pct": 1.689,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 84.38,
+            "std": 77.93,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.01,
+            "sat_pct": 1.689,
+            "dynamic_range": 252.0
+          }
+        },
+        "target": null,
+        "background": {
+          "raw": {
+            "mean": 82.44,
+            "std": 74.46,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 2.809,
+            "sat_pct": 1.721,
+            "dynamic_range": 255.0
+          },
+          "normalized": {
+            "mean": 82.44,
+            "std": 74.46,
+            "p1": 0.0,
+            "p99": 255.0,
+            "zero_pct": 2.809,
+            "sat_pct": 1.721,
+            "dynamic_range": 255.0
+          },
+          "clahe": {
+            "mean": 88.54,
+            "std": 77.46,
+            "p1": 3.0,
+            "p99": 255.0,
+            "zero_pct": 0.011,
+            "sat_pct": 1.721,
+            "dynamic_range": 252.0
+          }
+        },
+        "contrast_ratios": null,
+        "speckle_increase_pct": 4.03
+      },
+      "vis_file": "clahe_comp_20_Egyptian_02.png"
+    }
+  ]
+}

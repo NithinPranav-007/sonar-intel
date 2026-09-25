@@ -1,0 +1,205 @@
+{
+  "Artificial_Reef": {
+    "source_images_count": 6,
+    "tiles_count": 120,
+    "positive_tiles_count": 2,
+    "negative_tiles_count": 118,
+    "boxes_count": 2
+  },
+  "Barge_No_1": {
+    "source_images_count": 15,
+    "tiles_count": 388,
+    "positive_tiles_count": 40,
+    "negative_tiles_count": 348,
+    "boxes_count": 45
+  },
+  "Corsair": {
+    "source_images_count": 4,
+    "tiles_count": 64,
+    "positive_tiles_count": 3,
+    "negative_tiles_count": 61,
+    "boxes_count": 3
+  },
+  "Corsican": {
+    "source_images_count": 6,
+    "tiles_count": 96,
+    "positive_tiles_count": 7,
+    "negative_tiles_count": 89,
+    "boxes_count": 8
+  },
+  "DM_Wilson": {
+    "source_images_count": 22,
+    "tiles_count": 1372,
+    "positive_tiles_count": 89,
+    "negative_tiles_count": 1283,
+    "boxes_count": 141
+  },
+  "DR_Hanna": {
+    "source_images_count": 5,
+    "tiles_count": 100,
+    "positive_tiles_count": 11,
+    "negative_tiles_count": 89,
+    "boxes_count": 12
+  },
+  "EB_Allen": {
+    "source_images_count": 24,
+    "tiles_count": 384,
+    "positive_tiles_count": 56,
+    "negative_tiles_count": 328,
+    "boxes_count": 67
+  },
+  "Egyptian": {
+    "source_images_count": 15,
+    "tiles_count": 236,
+    "positive_tiles_count": 50,
+    "negative_tiles_count": 186,
+    "boxes_count": 154
+  },
+  "Exploratory_A": {
+    "source_images_count": 2,
+    "tiles_count": 216,
+    "positive_tiles_count": 0,
+    "negative_tiles_count": 216,
+    "boxes_count": 0
+  },
+  "Exploratory_B": {
+    "source_images_count": 13,
+    "tiles_count": 544,
+    "positive_tiles_count": 0,
+    "negative_tiles_count": 544,
+    "boxes_count": 0
+  },
+  "Exploratory_C": {
+    "source_images_count": 2,
+    "tiles_count": 296,
+    "positive_tiles_count": 0,
+    "negative_tiles_count": 296,
+    "boxes_count": 0
+  },
+  "Grecian": {
+    "source_images_count": 5,
+    "tiles_count": 48,
+    "positive_tiles_count": 19,
+    "negative_tiles_count": 29,
+    "boxes_count": 27
+  },
+  "Haltiner_Barge": {
+    "source_images_count": 13,
+    "tiles_count": 512,
+    "positive_tiles_count": 18,
+    "negative_tiles_count": 494,
+    "boxes_count": 31
+  },
+  "Heart_Failure": {
+    "source_images_count": 12,
+    "tiles_count": 152,
+    "positive_tiles_count": 21,
+    "negative_tiles_count": 131,
+    "boxes_count": 38
+  },
+  "Isaac_M_Scott": {
+    "source_images_count": 6,
+    "tiles_count": 104,
+    "positive_tiles_count": 23,
+    "negative_tiles_count": 81,
+    "boxes_count": 25
+  },
+  "James_Davidson": {
+    "source_images_count": 4,
+    "tiles_count": 216,
+    "positive_tiles_count": 14,
+    "negative_tiles_count": 202,
+    "boxes_count": 16
+  },
+  "Lucinda_van_Valkenburg": {
+    "source_images_count": 19,
+    "tiles_count": 372,
+    "positive_tiles_count": 76,
+    "negative_tiles_count": 296,
+    "boxes_count": 125
+  },
+  "Mischelley_Reef": {
+    "source_images_count": 8,
+    "tiles_count": 428,
+    "positive_tiles_count": 0,
+    "negative_tiles_count": 428,
+    "boxes_count": 0
+  },
+  "Monohansett": {
+    "source_images_count": 5,
+    "tiles_count": 296,
+    "positive_tiles_count": 27,
+    "negative_tiles_count": 269,
+    "boxes_count": 45
+  },
+  "Monrovia": {
+    "source_images_count": 8,
+    "tiles_count": 128,
+    "positive_tiles_count": 61,
+    "negative_tiles_count": 67,
+    "boxes_count": 118
+  },
+  "Montana": {
+    "source_images_count": 8,
+    "tiles_count": 188,
+    "positive_tiles_count": 75,
+    "negative_tiles_count": 113,
+    "boxes_count": 102
+  },
+  "Near_Shore": {
+    "source_images_count": 6,
+    "tiles_count": 448,
+    "positive_tiles_count": 29,
+    "negative_tiles_count": 419,
+    "boxes_count": 50
+  },
+  "Oscar_T_Flint": {
+    "source_images_count": 22,
+    "tiles_count": 468,
+    "positive_tiles_count": 31,
+    "negative_tiles_count": 437,
+    "boxes_count": 67
+  },
+  "Pewabic": {
+    "source_images_count": 5,
+    "tiles_count": 80,
+    "positive_tiles_count": 24,
+    "negative_tiles_count": 56,
+    "boxes_count": 43
+  },
+  "Shamrock": {
+    "source_images_count": 6,
+    "tiles_count": 112,
+    "positive_tiles_count": 12,
+    "negative_tiles_count": 100,
+    "boxes_count": 12
+  },
+  "Viator": {
+    "source_images_count": 11,
+    "tiles_count": 236,
+    "positive_tiles_count": 44,
+    "negative_tiles_count": 192,
+    "boxes_count": 51
+  },
+  "WH_Gilbert": {
+    "source_images_count": 6,
+    "tiles_count": 64,
+    "positive_tiles_count": 16,
+    "negative_tiles_count": 48,
+    "boxes_count": 38
+  },
+  "WP_Rend": {
+    "source_images_count": 11,
+    "tiles_count": 280,
+    "positive_tiles_count": 70,
+    "negative_tiles_count": 210,
+    "boxes_count": 200
+  },
+  "WP_Thew": {
+    "source_images_count": 17,
+    "tiles_count": 408,
+    "positive_tiles_count": 56,
+    "negative_tiles_count": 352,
+    "boxes_count": 80
+  }
+}

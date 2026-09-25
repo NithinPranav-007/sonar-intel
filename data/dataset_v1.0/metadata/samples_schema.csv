@@ -1,0 +1,13 @@
+field_name,data_type,allowed_values,description,provenance
+sample_id,string,alphanumeric,Unique identifier of the 640x640 tile sample,PRIMARY_KEY
+split,string,"train, val, test",Dataset partition assignment (site-isolated),SPLIT_ENGINE
+image_path,string,filepath,Relative path to the preprocessed 640x640 BGR PNG image,IMAGE_INDEX
+label_path,string,filepath,Relative path to the normalized YOLOv8 .txt label file,LABEL_INDEX
+class_id,integer,"-1, 0, 1, 2, 3, 4",Canonical class index (-1 = background negative),CANONICAL_ONTOLOGY
+class_name,string,"negative_background, crab_pot, submarine_pipeline, shipwreck, ghost_net, mine_like_contact",Canonical human-readable tactical class name,CANONICAL_ONTOLOGY
+source_dataset,string,dataset_identifier,Original contributing benchmark or repository source,PROVENANCE
+site_id,string,site_identifier,Geographic survey site or track ID used to prevent leakage,PARTITION_GROUP
+real_or_synthetic,string,"REAL, REAL_DOMAIN_ADAPTED, SYNTHETIC_ACOUSTIC_SIM",Authenticity classification of the acoustic backscatter,DATA_INTEGRITY
+coordinate_source,string,"real, synthetic_demo, unavailable",Provenance of geodetic positioning fields,GEODESIC_PROVENANCE
+num_objects,integer,non-negative integer,Number of ground truth bounding box targets on the tile,LABEL_METADATA
+preprocessing_profile,string,"P1, P2, P3, P4",Applied signal conditioning and normalization chain,PREPROCESSING_CONFIG

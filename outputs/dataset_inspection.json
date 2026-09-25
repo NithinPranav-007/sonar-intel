@@ -1,0 +1,173 @@
+{
+  "dataset_name": "AI4Shipwrecks",
+  "dataset_root": "data/raw/ai4shipwrecks",
+  "inspection_status": "COMPLETED",
+  "summary": {
+    "total_images": 286,
+    "total_masks": 286,
+    "matched_pairs": 286,
+    "unmatched_images": 0,
+    "unmatched_masks": 0,
+    "masks_containing_target": 161,
+    "masks_empty_background_only": 125,
+    "unique_sites_count": 29,
+    "sites": [
+      "Artificial_Reef",
+      "Barge_No_1",
+      "Corsair",
+      "Corsican",
+      "DM_Wilson",
+      "DR_Hanna",
+      "EB_Allen",
+      "Egyptian",
+      "Exploratory_A",
+      "Exploratory_B",
+      "Exploratory_C",
+      "Grecian",
+      "Haltiner_Barge",
+      "Heart_Failure",
+      "Isaac_M_Scott",
+      "James_Davidson",
+      "Lucinda_van_Valkenburg",
+      "Mischelley_Reef",
+      "Monohansett",
+      "Monrovia",
+      "Montana",
+      "Near_Shore",
+      "Oscar_T_Flint",
+      "Pewabic",
+      "Shamrock",
+      "Viator",
+      "WH_Gilbert",
+      "WP_Rend",
+      "WP_Thew"
+    ]
+  },
+  "image_specifications": {
+    "formats": [
+      "PNG"
+    ],
+    "channels": [
+      1
+    ],
+    "dtypes": [
+      "uint8"
+    ],
+    "intensity_min": 0,
+    "intensity_max": 255,
+    "width": {
+      "min": 1728,
+      "max": 1728,
+      "median": 1728.0
+    },
+    "height": {
+      "min": 13,
+      "max": 18745,
+      "median": 2218.5
+    }
+  },
+  "mask_specifications": {
+    "formats": [
+      "PNG"
+    ],
+    "channels": [
+      1
+    ],
+    "dtypes": [
+      "uint8"
+    ],
+    "unique_values": [
+      0,
+      1
+    ],
+    "width": {
+      "min": 1728,
+      "max": 1728,
+      "median": 1728.0
+    },
+    "height": {
+      "min": 13,
+      "max": 18745,
+      "median": 2218.5
+    }
+  },
+  "metadata_availability": {
+    "navigation_csv": "NOT AVAILABLE",
+    "gps_latitude": "NOT AVAILABLE",
+    "gps_longitude": "NOT AVAILABLE",
+    "vessel_heading": "NOT AVAILABLE",
+    "towfish_altitude": "NOT AVAILABLE",
+    "slant_range_metadata": "NOT AVAILABLE",
+    "sonar_frequency_metadata": "NOT AVAILABLE",
+    "target_bounding_boxes": "NOT AVAILABLE (only pixel segmentation masks provided)",
+    "debris_classes": "NOT AVAILABLE (labels only distinguish shipwreck from seabed)"
+  },
+  "split_breakdown": {
+    "train": {
+      "images": 141,
+      "labels": 141,
+      "sites": [
+        "DM_Wilson",
+        "DR_Hanna",
+        "EB_Allen",
+        "Egyptian",
+        "Grecian",
+        "Heart_Failure",
+        "Isaac_M_Scott",
+        "Montana",
+        "Near_Shore",
+        "Oscar_T_Flint",
+        "Pewabic",
+        "WP_Rend"
+      ]
+    },
+    "test": {
+      "images": 120,
+      "labels": 120,
+      "sites": [
+        "Artificial_Reef",
+        "Barge_No_1",
+        "Corsair",
+        "Corsican",
+        "Haltiner_Barge",
+        "James_Davidson",
+        "Lucinda_van_Valkenburg",
+        "Monohansett",
+        "Monrovia",
+        "Shamrock",
+        "Viator",
+        "WH_Gilbert",
+        "WP_Thew"
+      ]
+    },
+    "extras": {
+      "images": 25,
+      "labels": 25,
+      "sites": [
+        "Exploratory_A",
+        "Exploratory_B",
+        "Exploratory_C",
+        "Mischelley_Reef"
+      ]
+    }
+  },
+  "directory_structure": {
+    "dataset_root": "data/raw/ai4shipwrecks",
+    "splits": {
+      "extras": {
+        "terrain": [
+          "images",
+          "labels"
+        ]
+      },
+      "test": {
+        "images": 120,
+        "labels": 120
+      },
+      "train": {
+        "images": 141,
+        "labels": 141
+      }
+    }
+  }
+}

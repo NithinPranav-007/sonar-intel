@@ -1,0 +1,11 @@
+path: data/dataset_v1.0
+train: images/train
+val: images/val
+test: images/test
+nc: 5
+names:
+  0: crab_pot
+  1: submarine_pipeline
+  2: shipwreck
+  3: ghost_net
+  4: mine_like_contact
