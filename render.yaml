@@ -5,24 +5,81 @@ services:
     region: oregon
     plan: free
     branch: main
+
     buildCommand: "pip install --upgrade pip && pip install -r backend/requirements.txt"
+
     startCommand: "uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT"
+
     healthCheckPath: "/api/health"
+
     autoDeploy: true
+
     envVars:
+
+      # ============================
+      # PYTHON
+      # ============================
+
       - key: PYTHON_VERSION
-        value: 3.11.9
+        value: "3.11.9"
+
+      # ============================
+      # HUGGING FACE / ML
+      # ============================
+
       - key: HF_MODEL_ID
-        value: Samyukta31/sonar_yolo
+        value: "Samyukta31/sonar_yolo"
+
       - key: HF_MODEL_FILE
-        value: best_distilled_yolo11n.pt
+        value: "best_distilled_yolo11n.pt"
+
+      - key: HF_TOKEN
+        sync: false
+
+      - key: MODEL_PATH
+        value: "ml/models/best_distilled_yolo11n.pt"
+
+      - key: INFERENCE_PROVIDER
+        value: "local"
+
+      - key: CONFIDENCE_THRESHOLD
+        value: "0.25"
+
+      - key: IOU_THRESHOLD
+        value: "0.45"
+
+      - key: DEVICE
+        value: "cpu"
+
+      # ============================
+      # STORAGE
+      # ============================
+
       - key: STORAGE_RAW_DIR
-        value: data/raw
+        value: "data/raw"
+
       - key: STORAGE_PROCESSED_DIR
-        value: data/processed
+        value: "data/processed"
+
       - key: STORAGE_OUTPUTS_DIR
-        value: outputs
+        value: "outputs"
+
       - key: DEMO_DATA_DIR
-        value: data/demo
+        value: "data/demo"
+
+      # ============================
+      # CORS
+      # ============================
+
+      - key: FRONTEND_URL
+        value: "https://frontend-sigma-bay-90.vercel.app"
+
       - key: CORS_ORIGIN_REGEX
-        value: "^https:\\/\\/.*\\.vercel\\.app$"
+        value: "^https://.*\\.vercel\\.app$"
+
+      # ============================
+      # DATABASE
+      # ============================
+
+      - key: DATABASE_URL
+        sync: false
