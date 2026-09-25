@@ -7,33 +7,21 @@ overlapping sliding-window tiles for YOLOv8n (default 640x640) and translates
 candidate bounding boxes back to global image coordinates.
 """
 
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Iterator
 import numpy as np
 
 
-def generate_tiles(
+def generate_tiles_iter(
     image: np.ndarray,
     tile_size: int = 640,
     overlap: float = 0.20
-) -> List[Dict[str, Any]]:
+) -> Iterator[Dict[str, Any]]:
     """
-    Slices an image into overlapping tiles of size tile_size x tile_size.
-    
-    Returns a list of tile dicts:
-        [
-            {
-                "tile_id": int,
-                "tile_image": np.ndarray,
-                "offset_x": int,
-                "offset_y": int,
-                "width": int,
-                "height": int
-            }, ...
-        ]
+    Memory-safe generator that yields one overlapping tile at a time.
+    Avoids allocating a massive list containing all tile image arrays simultaneously in RAM.
     """
     h, w = image.shape[:2]
     step = int(tile_size * (1.0 - overlap))
-    tiles = []
     tile_id = 0
 
     y = 0
@@ -48,14 +36,14 @@ def generate_tiles(
 
             tile_crop = image[y_start:y_end, x_start:x_end]
 
-            tiles.append({
+            yield {
                 "tile_id": tile_id,
                 "tile_image": tile_crop,
                 "offset_x": x_start,
                 "offset_y": y_start,
                 "width": x_end - x_start,
                 "height": y_end - y_start
-            })
+            }
             tile_id += 1
 
             if x_end >= w:
@@ -66,7 +54,16 @@ def generate_tiles(
             break
         y += step
 
-    return tiles
+
+def generate_tiles(
+    image: np.ndarray,
+    tile_size: int = 640,
+    overlap: float = 0.20
+) -> List[Dict[str, Any]]:
+    """
+    Backward-compatible list generator.
+    """
+    return list(generate_tiles_iter(image, tile_size=tile_size, overlap=overlap))
 
 
 def map_tile_bbox_to_global(

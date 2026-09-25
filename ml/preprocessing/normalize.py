@@ -15,7 +15,7 @@ import cv2
 def normalize_sonar_intensity(image: np.ndarray) -> np.ndarray:
     """
     Min-max stretching of raw acoustic intensity to 8-bit grayscale [0, 255].
-    Preserves acoustic backscatter dynamics without saturation.
+    Preserves acoustic backscatter dynamics without saturation using a fast 256-entry LUT.
     """
     if image is None or image.size == 0:
         raise ValueError("Cannot normalize an empty or null image.")
@@ -24,15 +24,17 @@ def normalize_sonar_intensity(image: np.ndarray) -> np.ndarray:
         # Convert to single-channel acoustic backscatter if multi-channel
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     else:
-        gray = image.copy()
+        gray = image
 
-    # Percentile clipping (1st and 99th percentile) to reject sensor artifacts/spikes
-    p_min, p_max = np.percentile(gray, (1.0, 99.0))
+    # Percentile clipping (1st and 99th percentile) using strided sample for memory efficiency
+    sample = gray[::2, ::2] if (gray.shape[0] > 512 or gray.shape[1] > 512) else gray
+    p_min, p_max = float(np.percentile(sample, 1.0)), float(np.percentile(sample, 99.0))
     if p_max <= p_min:
         return np.zeros_like(gray, dtype=np.uint8)
 
-    clipped = np.clip(gray, p_min, p_max)
-    stretched = ((clipped - p_min) / (p_max - p_min) * 255.0).astype(np.uint8)
+    # Fast 256-entry LUT: avoids creating multi-megabyte float64 arrays during stretching
+    lut = np.clip((np.arange(256) - p_min) / (p_max - p_min + 1e-6) * 255.0, 0, 255).astype(np.uint8)
+    stretched = cv2.LUT(gray, lut)
     return stretched
 
 
@@ -73,12 +75,14 @@ def handle_water_column(
     nadir_start_x = max(0, mid_x - half_nadir)
     nadir_end_x = min(w, mid_x + half_nadir)
 
+    if not blank_nadir:
+        # Zero-copy return when nadir blanking is not requested
+        return image, (nadir_start_x, nadir_end_x)
+
     processed = image.copy()
-    if blank_nadir:
-        # Zero out nadir blind zone if desired
-        if len(processed.shape) == 3:
-            processed[:, nadir_start_x:nadir_end_x, :] = 0
-        else:
-            processed[:, nadir_start_x:nadir_end_x] = 0
+    if len(processed.shape) == 3:
+        processed[:, nadir_start_x:nadir_end_x, :] = 0
+    else:
+        processed[:, nadir_start_x:nadir_end_x] = 0
 
     return processed, (nadir_start_x, nadir_end_x)

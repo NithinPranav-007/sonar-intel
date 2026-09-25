@@ -42,24 +42,33 @@ def apply_lee_filter(
     if len(image.shape) == 3:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     else:
-        gray = image.copy()
+        gray = image
 
-    img_float = gray.astype(np.float32) / 255.0
+    img_float = gray.astype(np.float32) * (1.0 / 255.0)
 
     # Vectorized local mean and squared mean using uniform spatial box filter
     ksize = (window_size, window_size)
     local_mean = cv2.boxFilter(img_float, ddepth=-1, ksize=ksize, borderType=cv2.BORDER_REFLECT)
-    local_sq_mean = cv2.boxFilter(img_float ** 2, ddepth=-1, ksize=ksize, borderType=cv2.BORDER_REFLECT)
+    sq_img = np.square(img_float)
+    local_sq_mean = cv2.boxFilter(sq_img, ddepth=-1, ksize=ksize, borderType=cv2.BORDER_REFLECT)
+    del sq_img
 
     # Local variance: Var(I) = E[I^2] - (E[I])^2
-    local_var = np.maximum(local_sq_mean - (local_mean ** 2), 0.0)
+    local_var = np.maximum(local_sq_mean - np.square(local_mean), 0.0)
+    del local_sq_mean
 
     # Adaptive Lee weighting factor
     weights = np.maximum(0.0, local_var - noise_var) / (local_var + 1e-6)
-    weights = np.clip(weights, 0.0, 1.0)
+    del local_var
+    np.clip(weights, 0.0, 1.0, out=weights)
 
-    # Linear minimum mean square error estimate
-    filtered = local_mean + weights * (img_float - local_mean)
-    filtered = np.clip(filtered, 0.0, 1.0)
+    # Linear minimum mean square error estimate: local_mean + weights * (img_float - local_mean)
+    diff = img_float - local_mean
+    del img_float
+    filtered = local_mean + weights * diff
+    del diff, weights, local_mean
+    np.clip(filtered, 0.0, 1.0, out=filtered)
 
-    return (filtered * 255.0).astype(np.uint8)
+    out = (filtered * 255.0).astype(np.uint8)
+    del filtered
+    return out

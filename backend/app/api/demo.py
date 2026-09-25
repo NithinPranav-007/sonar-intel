@@ -122,30 +122,36 @@ def load_demo_sample(sample_id: str, db: Session = Depends(get_db)):
         nav_dest = os.path.join(sonar_service.raw_dir, f"{survey_id}_nav.csv")
         shutil.copyfile(nav_file, nav_dest)
 
-    # 1. Quality & Preprocessing
-    img = cv2.imread(raw_dest)
+    # 1. Inspect image dimensions and quality without keeping duplicate buffers in RAM
+    img = cv2.imread(raw_dest, cv2.IMREAD_UNCHANGED)
     if img is None:
         raise HTTPException(status_code=500, detail="Failed to load copied demo image.")
 
     h, w = img.shape[:2]
+    if (h * w) > settings.MAX_IMAGE_PIXELS:
+        del img
+        raise HTTPException(status_code=413, detail="Sonar image dimensions are too large for this deployment.")
+
     from ml.preprocessing.quality import compute_image_quality
     quality = compute_image_quality(img)
+    del img
+    import gc
+    gc.collect()
 
     processed_path = sonar_service.get_processed_path(survey_id)
-    sonar_service.pipeline.run(img, output_processed_path=processed_path)
 
     SurveyRepository(db).save_survey(
         survey_id=survey_id,
         filename=sample["filename"],
         raw_image_path=raw_dest,
-        processed_image_path=processed_path,
+        processed_image_path=None,  # Generated on-demand when requested by viewer
         nav_file_path=nav_dest,
         image_width=w,
         image_height=h,
         data_quality=quality["quality_score"]
     )
 
-    # 2. Real Inference
+    # 2. Real Inference using streamed tile processing
     contacts = inference_service.run_survey_analysis(
         survey_id=survey_id,
         raw_image_path=raw_dest,
@@ -153,6 +159,7 @@ def load_demo_sample(sample_id: str, db: Session = Depends(get_db)):
         confidence_threshold=0.20
     )
     ContactRepository(db).save_contacts(contacts)
+    gc.collect()
 
     survey_dto = SurveyUploadResponse(
         survey_id=survey_id,

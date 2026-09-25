@@ -17,7 +17,7 @@ import numpy as np
 
 from backend.app.schemas.contact import Contact, BoundingBox
 from backend.app.core.config import settings
-from ml.preprocessing.tiling import generate_tiles
+from ml.preprocessing.tiling import generate_tiles, generate_tiles_iter
 from ml.preprocessing.quality import compute_image_quality
 from ml.inference.drishti_detector import DrishtiDetector, DrishtiDetection
 from ml.inference.postprocess import deduplicate_detections
@@ -79,6 +79,11 @@ class InferenceService:
             raise ValueError(f"Failed to decode image file: {raw_image_path}")
 
         img_h, img_w = raw_image.shape[:2]
+        if (img_h * img_w) > settings.MAX_IMAGE_PIXELS:
+            raise ValueError(
+                f"Sonar image dimensions are too large for this deployment. "
+                f"({img_w}x{img_h} = {img_w*img_h:,} pixels; limit is {settings.MAX_IMAGE_PIXELS:,} pixels)"
+            )
 
         # 1. Compute Data Quality
         quality_metrics = compute_image_quality(raw_image)
@@ -94,27 +99,21 @@ class InferenceService:
                 offset_y=0
             )
         else:
-            # Generate deterministic overlapping 640x640 tiles
-            tiles = generate_tiles(
-                raw_image,
-                tile_size=settings.IMAGE_SIZE,
-                overlap=0.20
-            )
+            # Memory-safe stream of 640x640 tiles (processes 1 tile at a time without accumulating arrays)
             raw_detections: List[DrishtiDetection] = []
-            for tile in tiles:
-                tile_img = tile.get("tile_image", tile.get("image"))
-                offset_x = tile.get("offset_x", tile.get("x_offset", 0))
-                offset_y = tile.get("offset_y", tile.get("y_offset", 0))
+            for tile in generate_tiles_iter(raw_image, tile_size=settings.IMAGE_SIZE, overlap=0.20):
+                tile_img = tile["tile_image"]
+                offset_x = tile["offset_x"]
+                offset_y = tile["offset_y"]
+                tile_id_str = f"{survey_id}_T{tile['tile_id']:03d}"
                 tile_dets = self.detector.predict(
                     image=tile_img,
-                    tile_id=f"{survey_id}_T{tile['tile_id']:03d}",
+                    tile_id=tile_id_str,
                     offset_x=offset_x,
                     offset_y=offset_y
                 )
                 raw_detections.extend(tile_dets)
-                tile["tile_image"] = None
-                del tile_img
-            del tiles
+                del tile_img, tile
             gc.collect()
 
         # 3. Deduplicate detections across overlapping tile boundaries
@@ -192,6 +191,11 @@ class InferenceService:
             raise ValueError(f"Failed to decode image file: {raw_image_path}")
 
         img_h, img_w = raw_image.shape[:2]
+        if (img_h * img_w) > settings.MAX_IMAGE_PIXELS:
+            raise ValueError(
+                f"Sonar image dimensions are too large for this deployment. "
+                f"({img_w}x{img_h} = {img_w*img_h:,} pixels; limit is {settings.MAX_IMAGE_PIXELS:,} pixels)"
+            )
 
         # 1. Tile-based YOLO Detection
         if img_w <= settings.IMAGE_SIZE and img_h <= settings.IMAGE_SIZE:
@@ -202,19 +206,21 @@ class InferenceService:
                 offset_y=0
             )
         else:
-            tiles = generate_tiles(raw_image, tile_size=settings.IMAGE_SIZE, overlap=0.20)
             raw_detections: List[DrishtiDetection] = []
-            for tile in tiles:
-                tile_img = tile.get("tile_image", tile.get("image"))
-                offset_x = tile.get("offset_x", tile.get("x_offset", 0))
-                offset_y = tile.get("offset_y", tile.get("y_offset", 0))
+            for tile in generate_tiles_iter(raw_image, tile_size=settings.IMAGE_SIZE, overlap=0.20):
+                tile_img = tile["tile_image"]
+                offset_x = tile["offset_x"]
+                offset_y = tile["offset_y"]
+                tile_id_str = f"{survey_id}_T{tile['tile_id']:03d}"
                 tile_dets = self.detector.predict(
                     image=tile_img,
-                    tile_id=f"{survey_id}_T{tile['tile_id']:03d}",
+                    tile_id=tile_id_str,
                     offset_x=offset_x,
                     offset_y=offset_y
                 )
                 raw_detections.extend(tile_dets)
+                del tile_img, tile
+            gc.collect()
 
         # 2. Deduplicate detections
         det_dicts = [

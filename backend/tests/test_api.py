@@ -94,3 +94,53 @@ def test_survey_upload_and_pipeline():
     csv_res = client.get("/api/surveys/TEST_SURV_01/csv")
     assert csv_res.status_code == 200
     assert "contact_id,survey_id" in csv_res.text
+
+
+def test_demo_load_viator_04():
+    """Verify curated demo sample loads and performs inference cleanly under memory limits."""
+    res = client.post("/api/demo/load/viator_04")
+    assert res.status_code == 200
+    data = res.json()
+    assert "survey" in data
+    assert "contacts" in data
+    assert len(data["contacts"]) >= 1
+
+
+def test_upload_guardrails():
+    """Verify HTTP 413 is returned when payload or pixel limits are exceeded."""
+    from backend.app.core.config import settings
+
+    # 1. Test pixel dimension guardrail
+    orig_pixels = settings.MAX_IMAGE_PIXELS
+    try:
+        settings.MAX_IMAGE_PIXELS = 50000
+        img = np.ones((300, 300, 3), dtype=np.uint8) * 128
+        _, encoded = cv2.imencode(".png", img)
+        res = client.post("/api/surveys/upload", files={"sonar_file": ("oversized_px.png", encoded.tobytes(), "image/png")})
+        assert res.status_code == 413
+        assert "dimensions are too large" in res.json()["detail"].lower()
+    finally:
+        settings.MAX_IMAGE_PIXELS = orig_pixels
+
+    # 2. Test file byte size guardrail
+    orig_size = settings.MAX_SONAR_FILE_SIZE
+    try:
+        settings.MAX_SONAR_FILE_SIZE = 500
+        res = client.post("/api/surveys/upload", files={"sonar_file": ("oversized_file.png", b"x" * 2000, "image/png")})
+        assert res.status_code == 413
+        assert "too large" in res.json()["detail"].lower()
+    finally:
+        settings.MAX_SONAR_FILE_SIZE = orig_size
+
+
+def test_on_demand_processed_image():
+    """Verify /image/processed generates preview on demand."""
+    img = np.ones((200, 200, 3), dtype=np.uint8) * 100
+    _, enc = cv2.imencode(".png", img)
+    up = client.post("/api/surveys/upload", files={"sonar_file": ("preview_test.png", enc.tobytes(), "image/png")})
+    assert up.status_code == 201
+    sid = up.json()["survey_id"]
+
+    res = client.get(f"/api/surveys/{sid}/image/processed")
+    assert res.status_code == 200
+    assert len(res.content) > 0

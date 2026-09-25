@@ -170,13 +170,21 @@ class SonarService:
             )
 
         # =========================================================
-        # 5. IMAGE DIMENSIONS
+        # 5. IMAGE DIMENSIONS & PIXEL GUARDRAIL
         # =========================================================
 
         height, width = img.shape[:2]
+        if (height * width) > settings.MAX_IMAGE_PIXELS:
+            if os.path.exists(target_path):
+                os.remove(target_path)
+            del img
+            raise ValueError(
+                f"Sonar image dimensions are too large for this deployment. "
+                f"({width}x{height} = {width*height:,} pixels; limit is {settings.MAX_IMAGE_PIXELS:,} pixels)"
+            )
 
         # =========================================================
-        # 6. QUALITY METRICS
+        # 6. LIGHTWEIGHT QUALITY METRICS
         # =========================================================
 
         quality = compute_image_quality(
@@ -184,34 +192,14 @@ class SonarService:
         )
 
         # =========================================================
-        # 7. GENERATE PROCESSED PREVIEW
-        # =========================================================
-
-        processed_filename = (
-            f"{survey_id}_processed.png"
-        )
-
-        processed_path = os.path.join(
-            self.processed_dir,
-            processed_filename,
-        )
-
-        self.pipeline.run(
-            img,
-            output_processed_path=processed_path,
-            generate_tile_data=False,
-        )
-
-        # =========================================================
-        # 8. RELEASE LARGE IMAGE BUFFER
+        # 7. RELEASE LARGE IMAGE BUFFER (No YOLO or tiling during upload)
         # =========================================================
 
         del img
-
         gc.collect()
 
         # =========================================================
-        # 9. RETURN
+        # 8. RETURN
         # =========================================================
 
         return (
@@ -220,6 +208,36 @@ class SonarService:
             height,
             quality,
         )
+
+    # =============================================================
+    # PROCESSED IMAGE PREVIEW GENERATION (On-demand)
+    # =============================================================
+
+    def generate_processed_preview(
+        self,
+        raw_image_path: str,
+        output_processed_path: str,
+    ) -> bool:
+        """
+        Memory-safe generation of 1-99% normalized preview for the side-by-side viewer.
+        Uses fast 256-entry LUT stretching without tile generation or model loading.
+        """
+        if not os.path.exists(raw_image_path):
+            return False
+
+        img = cv2.imread(raw_image_path, cv2.IMREAD_UNCHANGED)
+        if img is None:
+            return False
+
+        from ml.preprocessing.normalize import normalize_sonar_intensity
+        normalized = normalize_sonar_intensity(img)
+        del img
+
+        os.makedirs(os.path.dirname(os.path.abspath(output_processed_path)), exist_ok=True)
+        success = cv2.imwrite(output_processed_path, normalized)
+        del normalized
+        gc.collect()
+        return bool(success)
 
     # =============================================================
     # PROCESSED IMAGE PATH

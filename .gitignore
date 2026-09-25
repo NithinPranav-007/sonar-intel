@@ -38,6 +38,7 @@ dist/
 
 # Ultralytics & Weights
 *.pt
+!ml/models/best_distilled_yolo11n.pt
 runs/
 wandb/
 

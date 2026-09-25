@@ -77,6 +77,14 @@ class Settings:
     )
 
     # ------------------------------------------------------------------
+    # Deployment Guardrails & Low-Memory Constraints (Render 512MB)
+    # ------------------------------------------------------------------
+    MAX_SONAR_FILE_SIZE: int = int(os.getenv("MAX_SONAR_FILE_SIZE", str(25 * 1024 * 1024)))  # 25 MB
+    MAX_NAV_FILE_SIZE: int = int(os.getenv("MAX_NAV_FILE_SIZE", str(5 * 1024 * 1024)))       # 5 MB
+    MAX_IMAGE_PIXELS: int = int(os.getenv("MAX_IMAGE_PIXELS", "25000000"))                     # 25 Megapixels
+    INFERENCE_BATCH_SIZE: int = int(os.getenv("INFERENCE_BATCH_SIZE", "1"))
+
+    # ------------------------------------------------------------------
     # Class Mappings & Product Policy
     # ------------------------------------------------------------------
     RAW_CLASSES: List[str] = [

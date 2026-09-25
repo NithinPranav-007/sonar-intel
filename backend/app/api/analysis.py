@@ -73,11 +73,25 @@ async def get_raw_image(survey_id: str, db: Session = Depends(get_db)):
 
 @router.get("/{survey_id}/image/processed")
 async def get_processed_image(survey_id: str, db: Session = Depends(get_db)):
-    """Serves the CLAHE normalized sonar image file."""
+    """Serves the normalized sonar image preview, generating it on-demand if necessary."""
     survey = SurveyRepository(db).get_survey(survey_id)
-    if not survey or not survey.processed_image_path or not os.path.exists(survey.processed_image_path):
-        # Fallback to raw if processed not yet created
-        if survey and os.path.exists(survey.raw_image_path):
-            return FileResponse(survey.raw_image_path)
-        raise HTTPException(status_code=404, detail="Processed image not found.")
-    return FileResponse(survey.processed_image_path)
+    if not survey:
+        raise HTTPException(status_code=404, detail=f"Survey '{survey_id}' not found.")
+
+    if survey.processed_image_path and os.path.exists(survey.processed_image_path):
+        return FileResponse(survey.processed_image_path)
+
+    # Generate on-demand preview from raw image if available
+    if survey.raw_image_path and os.path.exists(survey.raw_image_path):
+        from backend.app.services.sonar_service import SonarService
+        sonar_svc = SonarService()
+        proc_path = sonar_svc.get_processed_path(survey_id)
+        if not os.path.exists(proc_path):
+            sonar_svc.generate_processed_preview(survey.raw_image_path, proc_path)
+        if os.path.exists(proc_path):
+            survey.processed_image_path = proc_path
+            db.commit()
+            return FileResponse(proc_path)
+        return FileResponse(survey.raw_image_path)
+
+    raise HTTPException(status_code=404, detail="Processed image not found.")

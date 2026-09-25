@@ -27,6 +27,7 @@ from backend.app.database.connection import get_db
 from backend.app.database.repository import SurveyRepository
 from backend.app.services.sonar_service import SonarService
 from backend.app.schemas.survey import SurveyUploadResponse
+from backend.app.core.config import settings
 
 
 router = APIRouter(
@@ -45,20 +46,8 @@ router = APIRouter(
 # crashing the entire FastAPI process.
 #
 # Default: 25 MB
-MAX_SONAR_FILE_SIZE = int(
-    os.getenv(
-        "MAX_SONAR_FILE_SIZE",
-        str(25 * 1024 * 1024),
-    )
-)
-
-
-MAX_NAV_FILE_SIZE = int(
-    os.getenv(
-        "MAX_NAV_FILE_SIZE",
-        str(5 * 1024 * 1024),
-    )
-)
+MAX_SONAR_FILE_SIZE = settings.MAX_SONAR_FILE_SIZE
+MAX_NAV_FILE_SIZE = settings.MAX_NAV_FILE_SIZE
 
 
 # Create lightweight service.
@@ -153,12 +142,12 @@ async def upload_survey(
             detail="Uploaded sonar file is empty.",
         )
 
-    if file_size > MAX_SONAR_FILE_SIZE:
+    if file_size > settings.MAX_SONAR_FILE_SIZE:
 
         del file_bytes
 
         max_mb = (
-            MAX_SONAR_FILE_SIZE
+            settings.MAX_SONAR_FILE_SIZE
             / (1024 * 1024)
         )
 
@@ -190,8 +179,10 @@ async def upload_survey(
 
     except ValueError as e:
 
+        status_code = 413 if "too large" in str(e).lower() else 422
+
         raise HTTPException(
-            status_code=422,
+            status_code=status_code,
             detail=(
                 f"Image validation failed: {str(e)}"
             ),
@@ -226,12 +217,12 @@ async def upload_survey(
 
         nav_size = len(nav_bytes)
 
-        if nav_size > MAX_NAV_FILE_SIZE:
+        if nav_size > settings.MAX_NAV_FILE_SIZE:
 
             del nav_bytes
 
             max_nav_mb = (
-                MAX_NAV_FILE_SIZE
+                settings.MAX_NAV_FILE_SIZE
                 / (1024 * 1024)
             )
 

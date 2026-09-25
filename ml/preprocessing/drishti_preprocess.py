@@ -47,22 +47,28 @@ def drishti_preprocess(
     if image is None or image.size == 0:
         raise ValueError("Cannot preprocess empty or null image.")
 
-    # 1. Ensure working copy to avoid mutating source image
-    working = image.copy()
+    # 1. Reference image without unnecessary duplication
+    working = image
 
     # 2. Convert to single-channel grayscale if multi-channel
     if len(working.shape) == 3:
         gray = cv2.cvtColor(working, cv2.COLOR_BGR2GRAY)
+        created_gray = True
     else:
         gray = working
+        created_gray = False
 
-    # 3. Dynamic Range Normalization (Percentile stretching 1% to 99%)
-    p_min, p_max = np.percentile(gray, (1.0, 99.0))
+    # 3. Dynamic Range Normalization (Percentile stretching 1% to 99% via fast LUT)
+    sample = gray[::2, ::2] if (gray.shape[0] > 512 or gray.shape[1] > 512) else gray
+    p_min, p_max = float(np.percentile(sample, 1.0)), float(np.percentile(sample, 99.0))
     if p_max <= p_min:
         normalized = np.zeros_like(gray, dtype=np.uint8)
     else:
-        clipped = np.clip(gray, p_min, p_max)
-        normalized = ((clipped - p_min) / (p_max - p_min) * 255.0).astype(np.uint8)
+        lut = np.clip((np.arange(256) - p_min) / (p_max - p_min + 1e-6) * 255.0, 0, 255).astype(np.uint8)
+        normalized = cv2.LUT(gray, lut)
+
+    if created_gray:
+        del gray
 
     # 4. Lee Speckle Filtering
     if speckle_filter:
@@ -71,6 +77,7 @@ def drishti_preprocess(
             window_size=window_size,
             noise_var=noise_var
         )
+        del normalized
     else:
         speckle_cleaned = normalized
 
@@ -78,11 +85,13 @@ def drishti_preprocess(
     if apply_clahe_enhancement:
         clahe = cv2.createCLAHE(clipLimit=clahe_clip_limit, tileGridSize=clahe_tile_grid)
         enhanced = clahe.apply(speckle_cleaned)
+        del speckle_cleaned
     else:
         enhanced = speckle_cleaned
 
-    # 6. Format as 3-channel BGR for standard YOLOv8s inference
+    # 6. Format as 3-channel BGR for standard YOLO inference
     preprocessed_bgr = cv2.cvtColor(enhanced, cv2.COLOR_GRAY2BGR)
+    del enhanced
 
     metadata = {
         "preprocessing_version": PREPROCESSING_VERSION,

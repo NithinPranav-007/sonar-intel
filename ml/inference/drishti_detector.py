@@ -118,7 +118,7 @@ class DrishtiDetector:
         else:
             self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
-        # Resilient model loading: load if available, or defer to first inference call
+        # Model is loaded LAZILY on first predict() call to keep startup & upload RAM minimal (<100MB)
         self.model = None
         self.class_names: Dict[int, str] = {
             0: "crab_pot",
@@ -127,12 +127,6 @@ class DrishtiDetector:
             3: "ghost_net",
             4: "mine_cylinder"
         }
-        try:
-            self.model = self._get_or_load_model()
-            if self.model and hasattr(self.model, "names"):
-                self.class_names = self.model.names
-        except Exception as e:
-            print(f"[DrishtiDetector] Startup load notice: {e}. Model will load on demand.")
 
     def _get_or_load_model(self):
         """Loads and caches the YOLOv8s/YOLO11n model once per process with low-memory constraints."""
