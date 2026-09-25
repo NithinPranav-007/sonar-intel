@@ -9,20 +9,21 @@ import os
 import shutil
 import cv2
 import numpy as np
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, Optional
 
 from ml.preprocessing.pipeline import SonarPreprocessingPipeline
 from ml.preprocessing.quality import compute_image_quality
+from backend.app.core.config import settings
 
 
 class SonarService:
     def __init__(
         self,
-        raw_storage_dir: str = "data/raw",
-        processed_storage_dir: str = "data/processed"
+        raw_storage_dir: Optional[str] = None,
+        processed_storage_dir: Optional[str] = None
     ):
-        self.raw_dir = raw_storage_dir
-        self.processed_dir = processed_storage_dir
+        self.raw_dir = raw_storage_dir or settings.STORAGE_RAW_DIR
+        self.processed_dir = processed_storage_dir or settings.STORAGE_PROCESSED_DIR
         os.makedirs(self.raw_dir, exist_ok=True)
         os.makedirs(self.processed_dir, exist_ok=True)
         self.pipeline = SonarPreprocessingPipeline()

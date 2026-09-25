@@ -99,6 +99,36 @@ export function useSurvey() {
     return loadCuratedSample('survey_001');
   }, [loadCuratedSample]);
 
+  const uploadSurvey = useCallback(async (sonarFile: File, navFile?: File) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const surveyData = await apiService.uploadSurvey(sonarFile, navFile);
+      setSurvey(surveyData);
+      // Run automatic analysis immediately after upload
+      setAnalyzing(true);
+      try {
+        const result = await apiService.analyzeSurvey(surveyData.survey_id, 0.20);
+        setContacts(result.contacts);
+        if (result.contacts.length > 0) {
+          setSelectedContact(result.contacts[0]);
+        }
+        const sum = await apiService.getSurveySummary(surveyData.survey_id);
+        setSummary(sum);
+        const track = await apiService.getSurveyTrack(surveyData.survey_id);
+        setNavTrack(track);
+      } finally {
+        setAnalyzing(false);
+      }
+      return surveyData;
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to upload acoustic swath file.');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     survey,
     contacts,
@@ -110,6 +140,7 @@ export function useSurvey() {
     error,
     setSelectedContact,
     loadSurvey,
+    uploadSurvey,
     runAnalysis,
     submitReview,
     loadDemoSurvey,

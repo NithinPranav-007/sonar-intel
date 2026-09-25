@@ -6,16 +6,32 @@ and product-level filtering policies.
 """
 
 import os
+from pathlib import Path
 from typing import List, Tuple
 
+from dotenv import load_dotenv
+load_dotenv()
+
+# Discover project repo root reliably
+_core_dir = Path(__file__).resolve().parent
+_repo_root = _core_dir.parent.parent.parent
 
 class Settings:
+    # ------------------------------------------------------------------
+    # Storage and Base Paths
+    # ------------------------------------------------------------------
+    REPO_ROOT: Path = _repo_root
+    STORAGE_RAW_DIR: str = os.getenv("STORAGE_RAW_DIR", str(_repo_root / "data" / "raw"))
+    STORAGE_PROCESSED_DIR: str = os.getenv("STORAGE_PROCESSED_DIR", str(_repo_root / "data" / "processed"))
+    STORAGE_OUTPUTS_DIR: str = os.getenv("STORAGE_OUTPUTS_DIR", str(_repo_root / "outputs"))
+    DEMO_DATA_DIR: str = os.getenv("DEMO_DATA_DIR", str(_repo_root / "data" / "demo"))
+
     # ------------------------------------------------------------------
     # Model Provenance & Artifacts
     # ------------------------------------------------------------------
     MODEL_PATH: str = os.getenv(
         "MODEL_PATH",
-        os.path.join("ml", "models", "dristri", "best_detector.pt")
+        str(_repo_root / "ml" / "models" / "dristri" / "best_detector.pt")
     )
     MODEL_NAME: str = os.getenv("MODEL_NAME", "DRISHTI-YOLOv8s")
     MODEL_VERSION: str = os.getenv("MODEL_VERSION", "baseline-v1")
@@ -27,6 +43,15 @@ class Settings:
         "MODEL_SOURCE",
         "https://huggingface.co/rehan9599/drishti-detector"
     )
+
+    # ------------------------------------------------------------------
+    # Hugging Face & Remote Provider Integration
+    # ------------------------------------------------------------------
+    INFERENCE_PROVIDER: str = os.getenv("INFERENCE_PROVIDER", "local")
+    HF_SPACE: str = os.getenv("HF_SPACE", "SalmonAngelo/Sonar-Intel")
+    HF_MODEL_ID: str = os.getenv("HF_MODEL_ID", "Samyukta31/sonar_yolo")
+    HF_MODEL_FILE: str = os.getenv("HF_MODEL_FILE", "best_distilled_yolo11n.pt")
+    HF_TOKEN: str = os.getenv("HF_TOKEN", "")
 
     # ------------------------------------------------------------------
     # Inference Hyperparameters
@@ -66,3 +91,4 @@ class Settings:
 
 
 settings = Settings()
+

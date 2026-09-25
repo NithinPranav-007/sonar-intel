@@ -22,6 +22,10 @@ from sqlalchemy.orm import relationship
 from backend.app.database.connection import Base
 
 
+def utc_now():
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
 class SurveyModel(Base):
     __tablename__ = "surveys"
 
@@ -34,7 +38,7 @@ class SurveyModel(Base):
     image_height = Column(Integer, default=0)
     data_quality = Column(Float, default=1.0)
     has_navigation = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     contacts = relationship("ContactModel", back_populates="survey", cascade="all, delete-orphan")
 
@@ -69,8 +73,8 @@ class ContactModel(Base):
     review_note = Column(Text, nullable=True)
 
     model_version = Column(String(32), default="yolov8n-sonar-baseline")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 
     survey = relationship("SurveyModel", back_populates="contacts")
     reviews = relationship("ReviewModel", back_populates="contact", cascade="all, delete-orphan")
@@ -85,6 +89,6 @@ class ReviewModel(Base):
     review_status = Column(String(24), nullable=False)
     review_note = Column(Text, nullable=True)
     model_version = Column(String(32), nullable=False)
-    reviewed_at = Column(DateTime, default=datetime.datetime.utcnow)
+    reviewed_at = Column(DateTime, default=utc_now)
 
     contact = relationship("ContactModel", back_populates="reviews")

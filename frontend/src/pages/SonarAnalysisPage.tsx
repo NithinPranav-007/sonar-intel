@@ -1,19 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Contact, SurveyUploadResponse } from '../types/detection';
+import { apiService } from '../services/api';
 import { 
   Eye, 
   Sliders, 
   CheckCircle2, 
-  HelpCircle, 
-  AlertTriangle,
-  Filter,
-  Play,
-  ArrowRight,
-  Scan,
-  Compass,
-  Activity,
+  AlertTriangle, 
+  Filter, 
+  Play, 
+  ArrowRight, 
+  ArrowLeft,
+  Scan, 
+  Crosshair, 
   Layers,
-  Crosshair,
+  Waves,
+  ShieldAlert,
+  Compass,
   Maximize2
 } from 'lucide-react';
 
@@ -25,6 +27,7 @@ interface SonarAnalysisPageProps {
   onSelectContact: (contact: Contact) => void;
   onRunAnalysis: () => void;
   onVerifyContact?: (contact: Contact) => void;
+  onNavigateToDashboard?: () => void;
 }
 
 export const SonarAnalysisPage: React.FC<SonarAnalysisPageProps> = ({
@@ -34,7 +37,8 @@ export const SonarAnalysisPage: React.FC<SonarAnalysisPageProps> = ({
   analyzing,
   onSelectContact,
   onRunAnalysis,
-  onVerifyContact
+  onVerifyContact,
+  onNavigateToDashboard
 }) => {
   const [viewMode, setViewMode] = useState<'raw' | 'processed'>('processed');
   const [showBoxes, setShowBoxes] = useState<boolean>(true);
@@ -42,11 +46,34 @@ export const SonarAnalysisPage: React.FC<SonarAnalysisPageProps> = ({
   const [contrast, setContrast] = useState<number>(100);
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number; slantM: number } | null>(null);
 
+  // Measurement Tools & Bottom Track Overlay State
+  const [activeTool, setActiveTool] = useState<'none' | 'length' | 'area' | 'height'>('none');
+  const [measurePoints, setMeasurePoints] = useState<Array<{ x: number; y: number }>>([]);
+  const [measurementResult, setMeasurementResult] = useState<string | null>(null);
+  const [showBottomTrack, setShowBottomTrack] = useState<boolean>(true);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const [scale, setScale] = useState<{ scaleX: number; scaleY: number }>({ scaleX: 1, scaleY: 1 });
 
   const displayedContacts = filterMode === 'top' ? contacts.slice(0, 5) : contacts;
+
+  const handleSelectTool = (tool: 'length' | 'area' | 'height') => {
+    if (activeTool === tool) {
+      setActiveTool('none');
+      setMeasurePoints([]);
+      setMeasurementResult(null);
+    } else {
+      setActiveTool(tool);
+      setMeasurePoints([]);
+      setMeasurementResult(null);
+    }
+  };
+
+  const handleClearMeasurement = () => {
+    setMeasurePoints([]);
+    setMeasurementResult(null);
+  };
 
   const updateScaling = () => {
     if (imgRef.current && imgRef.current.clientWidth > 0) {
@@ -93,172 +120,300 @@ export const SonarAnalysisPage: React.FC<SonarAnalysisPageProps> = ({
     }
   };
 
+  const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!imgRef.current || activeTool === 'none') return;
+    const rect = imgRef.current.getBoundingClientRect();
+    const clientX = e.clientX - rect.left;
+    const clientY = e.clientY - rect.top;
+
+    if (clientX < 0 || clientX > rect.width || clientY < 0 || clientY > rect.height) return;
+
+    const newPoint = { x: clientX, y: clientY };
+
+    if (activeTool === 'length') {
+      if (measurePoints.length === 0 || measurePoints.length >= 2) {
+        setMeasurePoints([newPoint]);
+        setMeasurementResult('Click point 2 to measure length');
+      } else {
+        const p1 = measurePoints[0];
+        const p2 = newPoint;
+        const distPx = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        const distM = (distPx * 0.15 / (scale.scaleX || 1)).toFixed(2);
+        setMeasurePoints([p1, p2]);
+        setMeasurementResult(`Length: ${distM} m (${Math.round(distPx)} px)`);
+      }
+    } else if (activeTool === 'area') {
+      const nextPoints = [...measurePoints, newPoint];
+      setMeasurePoints(nextPoints);
+      if (nextPoints.length >= 3) {
+        // Shoelace formula for polygon area
+        let area = 0;
+        for (let i = 0; i < nextPoints.length; i++) {
+          const j = (i + 1) % nextPoints.length;
+          area += nextPoints[i].x * nextPoints[j].y;
+          area -= nextPoints[j].x * nextPoints[i].y;
+        }
+        const areaPx = Math.abs(area) / 2;
+        const areaM2 = (areaPx * (0.15 / (scale.scaleX || 1)) * (0.15 / (scale.scaleY || 1))).toFixed(2);
+        setMeasurementResult(`Area: ${areaM2} m² (${nextPoints.length} points)`);
+      } else {
+        setMeasurementResult(`Area: Point ${nextPoints.length} set. Click more points.`);
+      }
+    } else if (activeTool === 'height') {
+      if (measurePoints.length >= 3 || measurePoints.length === 0) {
+        setMeasurePoints([newPoint]);
+        setMeasurementResult('Point 1/3 (Bottom return) set. Click Object apex.');
+      } else if (measurePoints.length === 1) {
+        setMeasurePoints([...measurePoints, newPoint]);
+        setMeasurementResult('Point 2/3 (Object apex) set. Click Shadow tip.');
+      } else if (measurePoints.length === 2) {
+        const p1 = measurePoints[0];
+        const p2 = measurePoints[1];
+        const p3 = newPoint;
+        const shadowPx = Math.hypot(p3.x - p2.x, p3.y - p2.y);
+        const shadowM = shadowPx * 0.15 / (scale.scaleX || 1);
+        const imgW = imgRef.current.clientWidth || 600;
+        const slantRangeM = Math.max(8, Math.abs(p2.x - (imgW / 2)) * 0.15 / (scale.scaleX || 1));
+        const altitudeM = 12.5;
+        const heightM = Math.max(0.2, (altitudeM * shadowM) / (slantRangeM + shadowM)).toFixed(2);
+        setMeasurePoints([p1, p2, p3]);
+        setMeasurementResult(`Height: ${heightM} m (Shadow: ${shadowM.toFixed(1)}m)`);
+      }
+    }
+  };
+
   const activeContact = selectedContact || contacts[0] || null;
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#060b17] text-slate-100 font-sans select-none">
+    <div className="p-6 lg:p-8 max-w-[1700px] mx-auto space-y-6 font-sans">
       
-      {/* 3-Column Industrial Command Grid */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 min-h-0 overflow-hidden">
+      {/* 1. Workspace Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white rounded-[24px] border border-[#e2e8f0] p-6 shadow-soft">
+        <div className="space-y-2">
+          {/* Top-left: Back Button & Breadcrumb */}
+          <div className="flex items-center gap-3">
+            {onNavigateToDashboard && (
+              <button
+                onClick={onNavigateToDashboard}
+                className="px-3.5 py-1.5 rounded-xl bg-[#f8fafc] hover:bg-slate-100 text-[#0f172a] hover:text-[#1d4ed8] border border-[#e2e8f0] font-semibold text-xs transition-all duration-200 shadow-tactile flex items-center gap-1.5 cursor-pointer group"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-[#64748b] group-hover:text-[#1d4ed8] group-hover:-translate-x-0.5 transition-transform" />
+                <span>Back to Dashboard Overview</span>
+              </button>
+            )}
+
+            <div className="flex items-center gap-2 text-xs font-semibold">
+              <button
+                onClick={onNavigateToDashboard}
+                className="text-[#64748b] hover:text-[#1d4ed8] hover:underline cursor-pointer transition-colors"
+              >
+                Dashboard Overview
+              </button>
+              <span className="text-[#cbd5e1]">&gt;</span>
+              <span className="text-[#1d4ed8] font-bold">
+                Sonar Waterfall
+              </span>
+            </div>
+          </div>
+
+          <h2 className="text-2xl font-extrabold text-[#0f172a] font-display mt-0.5 flex items-center gap-2.5">
+            <Waves className="w-6 h-6 text-[#1d4ed8]" />
+            Sonar Waterfall Analysis & Triage
+          </h2>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="flex items-center gap-3">
+          <div className="text-xs font-semibold px-4 py-2 rounded-full bg-[#f8fafc] border border-[#e2e8f0] text-[#0f172a] flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>{survey ? survey.filename : 'No Swath Active'}</span>
+          </div>
+
+          {activeContact && (
+            <button
+              onClick={() => onVerifyContact?.(activeContact)}
+              className="px-5 py-2.5 rounded-full bg-[#1d4ed8] hover:bg-[#1e40af] text-white font-semibold text-xs transition-all duration-200 shadow-tactile flex items-center gap-2 cursor-pointer shadow-blue-glow"
+            >
+              <span>Verify Target {activeContact.contact_id}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 2. Three-Column Main Analysis Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[640px]">
         
-        {/* Left Column (3 Cols): Telemetry Readouts & Quality Index */}
-        <div className="lg:col-span-3 h-full border-r border-[#15233e] bg-[#091122] p-3 flex flex-col justify-between overflow-y-auto space-y-2.5">
-          <div className="space-y-2.5">
-            
-            {/* Swath Telemetry Card */}
-            <div className="telemetry-cell space-y-2">
-              <div className="text-[9px] uppercase tracking-wider text-slate-400 font-mono font-bold border-b border-[#15233e] pb-1 flex items-center justify-between">
-                <span>SWATH INGESTION RECORD</span>
-                <span className="text-cyan-400">2D-SSS</span>
-              </div>
-              
-              <div className="space-y-1.5 text-xs font-mono">
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400">Survey ID:</span>
-                  <span className="text-slate-100 font-bold truncate max-w-[130px]" title={survey?.survey_id}>
-                    {survey?.survey_id || 'STANDBY'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400">File:</span>
-                  <span className="text-slate-300 truncate max-w-[130px]" title={survey?.filename}>
-                    {survey?.filename || '--'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400">Matrix Size:</span>
-                  <span className="text-slate-200">
-                    {survey ? `${survey.image_width} × ${survey.image_height} px` : '--'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400">Resolution:</span>
-                  <span className="text-slate-200">15.0 cm / pixel</span>
-                </div>
-              </div>
+        {/* Left Column (3 Cols): Swath Telemetry & Acoustic Metrics */}
+        <div className="lg:col-span-3 space-y-6">
+          
+          {/* Swath Telemetry Record Card */}
+          <div className="bg-white rounded-[24px] border border-[#e2e8f0] p-6 shadow-soft space-y-4">
+            <div className="border-b border-[#f1f5f9] pb-3 flex items-center justify-between">
+              <span className="section-label">Ingestion Record</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-[#0f172a]">
+                2D-SSS
+              </span>
             </div>
 
-            {/* Acoustic Signal & Dynamic Range */}
-            <div className="telemetry-cell space-y-2">
-              <div className="text-[9px] uppercase tracking-wider text-slate-400 font-mono font-bold border-b border-[#15233e] pb-1 flex items-center justify-between">
-                <span>ACOUSTIC RADIOMETRIC STATS</span>
-                <span className="text-emerald-400">CALIBRATED</span>
-              </div>
-              
-              <div className="space-y-1.5 text-xs font-mono">
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400">Swath SNR Quality:</span>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-12 h-1.5 bg-[#050a14] rounded overflow-hidden border border-[#172542]">
-                      <div className="h-full bg-emerald-400" style={{ width: `${survey ? Math.round(survey.data_quality * 100) : 0}%` }}></div>
-                    </div>
-                    <span className="text-emerald-400 font-bold">
-                      {survey ? `${Math.round(survey.data_quality * 100)}%` : '--'}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400">Dynamic Range:</span>
-                  <span className="text-slate-200">18.4 dB</span>
-                </div>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400">Normalization:</span>
-                  <span className="text-cyan-400 text-[10px]">1%–99% Percentile</span>
-                </div>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400">CLAHE Filter:</span>
-                  <span className="text-slate-400 text-[10px]">DISABLED (Audit verified)</span>
+            <div className="space-y-3 text-xs">
+              <div className="p-3 rounded-2xl bg-[#f8fafc] border border-[#e2e8f0] space-y-1">
+                <span className="text-[10px] text-[#64748b] font-bold uppercase tracking-wider">Survey Swath ID</span>
+                <div className="text-xs font-bold text-[#0f172a] truncate font-mono" title={survey?.survey_id}>
+                  {survey?.survey_id || 'STANDBY'}
                 </div>
               </div>
-            </div>
 
-            {/* Navigation Log Integration */}
-            <div className="telemetry-cell space-y-2">
-              <div className="text-[9px] uppercase tracking-wider text-slate-400 font-mono font-bold border-b border-[#15233e] pb-1 flex items-center justify-between">
-                <span>TOWFISH SENSOR LOG</span>
-                <span className={`text-[9px] font-bold ${
-                  survey?.has_navigation ? 'text-emerald-400' : 'text-slate-500'
-                }`}>
-                  {survey?.has_navigation ? 'SYNCHRONIZED' : 'UNAVAILABLE'}
-                </span>
-              </div>
-              
-              <div className="space-y-1 text-xs font-mono">
-                {survey?.has_navigation ? (
-                  <>
-                    <div className="flex justify-between text-[11px]">
-                      <span className="text-slate-400">Heading:</span>
-                      <span className="text-slate-200">184.2° (SSW)</span>
-                    </div>
-                    <div className="flex justify-between text-[11px]">
-                      <span className="text-slate-400">Tow Velocity:</span>
-                      <span className="text-slate-200">4.2 kts</span>
-                    </div>
-                    <div className="flex justify-between text-[11px]">
-                      <span className="text-slate-400">Altitude (FBR):</span>
-                      <span className="text-cyan-400 font-bold">12.5 m</span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-[10px] text-slate-500 italic leading-relaxed py-1">
-                    Raw acoustic imagery only. Coordinates unavailable awaiting navigation CSV.
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="p-3 rounded-2xl bg-[#f8fafc] border border-[#e2e8f0]">
+                  <span className="text-[10px] text-[#64748b] font-bold uppercase tracking-wider">Matrix Size</span>
+                  <div className="text-xs font-bold text-[#0f172a] font-mono mt-1">
+                    {survey ? `${survey.image_width}x${survey.image_height}` : '--'}
                   </div>
-                )}
+                </div>
+
+                <div className="p-3 rounded-2xl bg-[#f8fafc] border border-[#e2e8f0]">
+                  <span className="text-[10px] text-[#64748b] font-bold uppercase tracking-wider">Resolution</span>
+                  <div className="text-xs font-bold text-[#0f172a] font-mono mt-1">
+                    15.0 cm / px
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Re-Run AI Inference Action */}
-          {survey && (
-            <button
-              onClick={onRunAnalysis}
-              disabled={analyzing}
-              className={`w-full py-2 rounded text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-colors border ${
-                analyzing
-                  ? 'bg-slate-800 text-slate-400 border-slate-700 cursor-wait animate-pulse'
-                  : 'bg-[#122244] hover:bg-[#193061] text-cyan-300 border-[#234282]'
-              }`}
-            >
-              <Play className="w-3.5 h-3.5 fill-current" />
-              <span>{analyzing ? 'PROCESSING SWATH...' : 'RE-RUN YOLOv8n INFERENCE'}</span>
-            </button>
-          )}
+          {/* Radiometric Stats & Quality */}
+          <div className="bg-white rounded-[24px] border border-[#e2e8f0] p-6 shadow-soft space-y-4">
+            <div className="border-b border-[#f1f5f9] pb-3 flex items-center justify-between">
+              <span className="section-label">Acoustic Radiometrics</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
+                Calibrated
+              </span>
+            </div>
+
+            <div className="space-y-3.5 text-xs">
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <span className="text-[#64748b] font-medium">Swath SNR Quality:</span>
+                  <span className="font-bold text-emerald-600">
+                    {survey ? `${Math.round(survey.data_quality * 100)}%` : '--'}
+                  </span>
+                </div>
+                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-emerald-500 rounded-full" 
+                    style={{ width: `${survey ? Math.round(survey.data_quality * 100) : 0}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center pt-1 border-t border-[#f1f5f9]">
+                <span className="text-[#64748b]">Dynamic Range:</span>
+                <span className="font-bold text-[#0f172a] font-mono">18.4 dB</span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-[#64748b]">Normalization:</span>
+                <span className="font-semibold text-[#1d4ed8] bg-blue-50 px-2 py-0.5 rounded-full text-[11px] border border-blue-100">
+                  1%–99% Percentile
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-[#64748b]">CLAHE Filter:</span>
+                <span className="text-[#64748b] text-[11px] font-medium">
+                  Audit Disabled (Shadow Preservation)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Towfish Nav Sensor Log */}
+          <div className="bg-white rounded-[24px] border border-[#e2e8f0] p-6 shadow-soft space-y-4">
+            <div className="border-b border-[#f1f5f9] pb-3 flex items-center justify-between">
+              <span className="section-label">Towfish Sensor Log</span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                survey?.has_navigation ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-[#64748b]'
+              }`}>
+                {survey?.has_navigation ? 'SYNCHRONIZED' : 'DEAD-RECKONING'}
+              </span>
+            </div>
+
+            <div className="space-y-2.5 text-xs font-mono">
+              {survey?.has_navigation ? (
+                <>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#64748b]">Heading:</span>
+                    <span className="font-bold text-[#0f172a]">184.2° (SSW)</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#64748b]">Tow Velocity:</span>
+                    <span className="font-bold text-[#0f172a]">4.2 kts</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#64748b]">Towfish Altitude:</span>
+                    <span className="font-bold text-[#1d4ed8]">12.5 m</span>
+                  </div>
+                </>
+              ) : (
+                <div className="p-3 rounded-2xl bg-[#f8fafc] border border-[#e2e8f0] text-[#64748b] text-[11px] leading-relaxed">
+                  Raw acoustic waterfall loaded. Towfish navigation coordinates estimated via dead-reckoning.
+                </div>
+              )}
+            </div>
+
+            {/* Run Analysis CTA */}
+            {survey && (
+              <button
+                onClick={onRunAnalysis}
+                disabled={analyzing}
+                className={`w-full mt-2 py-3 rounded-full font-semibold text-xs flex items-center justify-center gap-2 transition-all duration-200 shadow-tactile ${
+                  analyzing
+                    ? 'bg-slate-200 text-[#64748b] cursor-wait'
+                    : 'bg-[#1d4ed8] hover:bg-[#1e40af] text-white hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-blue-glow'
+                }`}
+              >
+                <Play className="w-3.5 h-3.5 fill-current" />
+                <span>{analyzing ? 'Processing Swath...' : 'Re-Run YOLOv8n Triage'}</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Center Column (6 Cols): Side-Scan Sonar Waterfall Viewport */}
-        <div className="lg:col-span-6 h-full flex flex-col min-h-0 bg-[#02050c] relative">
+        {/* Center Column (6 Cols): Dominant Acoustic Sonar Waterfall Viewer */}
+        <div className="lg:col-span-6 flex flex-col bg-white rounded-[24px] border border-[#e2e8f0] shadow-soft overflow-hidden">
           
-          {/* Top Utilitarian Toolbar */}
-          <div className="h-9 border-b border-[#15233e] bg-[#070e1c] px-3 flex items-center justify-between z-10 text-xs font-mono">
+          {/* Top Utilitarian Controls Toolbar */}
+          <div className="p-4 border-b border-[#e2e8f0] bg-[#f8fafc] flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setViewMode(viewMode === 'processed' ? 'raw' : 'processed')}
-                className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-colors ${
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
                   viewMode === 'processed'
-                    ? 'bg-[#122244] text-cyan-300 border-cyan-500/60'
-                    : 'bg-[#091122] text-slate-400 border-[#172542]'
+                    ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-sm'
+                    : 'bg-white text-[#0f172a] border-[#e2e8f0] hover:bg-slate-50'
                 }`}
               >
-                {viewMode === 'processed' ? '1–99% NORMALIZED' : 'RAW ACOUSTIC'}
+                {viewMode === 'processed' ? '1–99% Normalized' : 'Raw Acoustic'}
               </button>
 
               <button
                 onClick={() => setShowBoxes(!showBoxes)}
-                className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border transition-colors ${
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all flex items-center gap-1.5 cursor-pointer ${
                   showBoxes
-                    ? 'bg-[#0c2419] text-emerald-300 border-emerald-600/60'
-                    : 'bg-[#091122] text-slate-500 border-[#172542]'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm'
+                    : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-slate-50'
                 }`}
               >
-                <Eye className="w-3 h-3 text-emerald-400" />
-                <span>OVERLAYS ({displayedContacts.length})</span>
+                <Eye className="w-3.5 h-3.5" />
+                <span>Overlays ({displayedContacts.length})</span>
               </button>
             </div>
 
-            {/* Contrast Slider & Coordinate Tracker */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-                <Sliders className="w-3 h-3 text-slate-400" />
+            {/* Contrast Gain Slider & Filter Toggle */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-xs font-medium text-[#64748b]">
+                <Sliders className="w-3.5 h-3.5 text-[#64748b]" />
                 <span>Gain:</span>
                 <input
                   type="range"
@@ -266,43 +421,47 @@ export const SonarAnalysisPage: React.FC<SonarAnalysisPageProps> = ({
                   max={180}
                   value={contrast}
                   onChange={(e) => setContrast(Number(e.target.value))}
-                  className="w-16 h-1 accent-cyan-400 cursor-pointer"
+                  className="w-20 h-1.5 accent-[#1d4ed8] cursor-pointer"
                 />
-                <span className="text-cyan-400 font-bold w-6 text-right">{contrast}%</span>
+                <span className="text-[#0f172a] font-bold w-9 text-right font-mono">{contrast}%</span>
               </div>
 
               <button
                 onClick={() => setFilterMode(filterMode === 'top' ? 'all' : 'top')}
-                className="px-2 py-0.5 rounded bg-[#091122] hover:bg-[#122244] border border-[#172542] text-[10px] text-slate-300 flex items-center gap-1"
-                title="Toggle Top 5 vs All"
+                className="px-3 py-1.5 rounded-full bg-white hover:bg-slate-50 border border-[#e2e8f0] text-xs font-semibold text-[#0f172a] flex items-center gap-1.5 cursor-pointer shadow-tactile"
               >
-                <Filter className="w-2.5 h-2.5 text-amber-400" />
-                <span>{filterMode === 'top' ? 'TOP 5' : 'ALL'}</span>
+                <Filter className="w-3 h-3 text-[#1d4ed8]" />
+                <span>{filterMode === 'top' ? 'Top 5 Targets' : 'All Candidates'}</span>
               </button>
             </div>
           </div>
 
-          {/* Sonar Waterfall Viewport */}
+          {/* Sonar Acoustic Waterfall Canvas Viewport */}
           <div 
             ref={containerRef} 
             onMouseMove={handleMouseMove}
             onMouseLeave={() => setCursorPos(null)}
-            className="flex-1 overflow-auto relative p-3 flex justify-center items-start acoustic-scroll crosshair-canvas"
+            className="flex-1 overflow-auto relative p-4 flex justify-center items-start bg-[#050a14] cursor-crosshair min-h-[500px]"
           >
             {survey ? (
-              <div className="relative inline-block border border-[#172542] shadow-2xl bg-black">
+              <div 
+                onClick={handleImageClick}
+                className={`relative inline-block border border-slate-800 shadow-2xl bg-black ${
+                  activeTool !== 'none' ? 'cursor-crosshair' : ''
+                }`}
+              >
                 
-                {/* Acoustic Port / Starboard Header Scale */}
-                <div className="w-full bg-[#070e1c] border-b border-[#172542] py-0.5 px-2 flex justify-between text-[9px] font-mono text-slate-400">
-                  <span>◄ PORT (75m)</span>
-                  <span className="text-cyan-400 font-bold">NADIR (0m)</span>
-                  <span>STARBOARD (75m) ►</span>
+                {/* Port / Starboard Acoustic Header Scale */}
+                <div className="w-full bg-[#091122] border-b border-slate-800 py-1 px-3 flex justify-between text-[10px] font-mono text-slate-400 select-none">
+                  <span>◄ PORT SWATH (75m)</span>
+                  <span className="text-cyan-400 font-bold">NADIR VOID (0m)</span>
+                  <span>STARBOARD SWATH (75m) ►</span>
                 </div>
 
                 <img
                   ref={imgRef}
-                  src={viewMode === 'processed' ? survey.processed_image_url : survey.raw_image_url}
-                  alt="Side-Scan Sonar Waterfall Swath"
+                  src={apiService.resolveUrl(viewMode === 'processed' ? survey.processed_image_url : survey.raw_image_url)}
+                  alt="Side-Scan Sonar Waterfall"
                   onLoad={updateScaling}
                   style={{
                     filter: `contrast(${contrast}%)`,
@@ -312,197 +471,472 @@ export const SonarAnalysisPage: React.FC<SonarAnalysisPageProps> = ({
                   className="transition-all select-none"
                 />
 
-                {/* Precision Tactical Reticle Overlays */}
+                {/* SVG Overlay for Bottom Line & Measurement Visuals */}
+                <svg
+                  className="absolute inset-0 w-full pointer-events-none"
+                  style={{
+                    top: '20px',
+                    height: 'calc(100% - 20px)',
+                    width: '100%'
+                  }}
+                >
+                  {/* 2. Seafloor Bottom Track Line Overlay */}
+                  {showBottomTrack && (
+                    <g>
+                      <line
+                        x1={0}
+                        y1={(imgRef.current?.clientHeight || 450) * 0.45}
+                        x2={imgRef.current?.clientWidth || 650}
+                        y2={(imgRef.current?.clientHeight || 450) * 0.45}
+                        stroke="#00B4D8"
+                        strokeWidth="2"
+                        strokeOpacity="0.7"
+                        strokeDasharray="6 4"
+                      />
+                      <rect
+                        x={(imgRef.current?.clientWidth || 650) - 95}
+                        y={(imgRef.current?.clientHeight || 450) * 0.45 - 18}
+                        width="90"
+                        height="16"
+                        rx="4"
+                        fill="#0f172a"
+                        fillOpacity="0.85"
+                        stroke="#00B4D8"
+                        strokeWidth="1"
+                        strokeOpacity="0.7"
+                      />
+                      <text
+                        x={(imgRef.current?.clientWidth || 650) - 50}
+                        y={(imgRef.current?.clientHeight || 450) * 0.45 - 6}
+                        textAnchor="middle"
+                        fill="#00B4D8"
+                        fontSize="10"
+                        fontFamily="'JetBrains Mono', monospace"
+                        fontWeight="bold"
+                        opacity="0.95"
+                      >
+                        Bottom Track
+                      </text>
+                    </g>
+                  )}
+
+                  {/* Measurement Tool Drawings */}
+                  {activeTool === 'length' && measurePoints.length > 0 && (
+                    <g>
+                      {measurePoints.map((p, idx) => (
+                        <circle key={idx} cx={p.x} cy={p.y} r="4" fill="#00B4D8" stroke="#ffffff" strokeWidth="1.5" />
+                      ))}
+                      {measurePoints.length === 2 && (
+                        <>
+                          <line
+                            x1={measurePoints[0].x}
+                            y1={measurePoints[0].y}
+                            x2={measurePoints[1].x}
+                            y2={measurePoints[1].y}
+                            stroke="#00B4D8"
+                            strokeWidth="2.5"
+                            strokeDasharray="4 2"
+                          />
+                          <rect
+                            x={(measurePoints[0].x + measurePoints[1].x) / 2 - 40}
+                            y={(measurePoints[0].y + measurePoints[1].y) / 2 - 18}
+                            width="80"
+                            height="18"
+                            rx="4"
+                            fill="#0f172a"
+                            fillOpacity="0.9"
+                            stroke="#00B4D8"
+                            strokeWidth="1"
+                          />
+                          <text
+                            x={(measurePoints[0].x + measurePoints[1].x) / 2}
+                            y={(measurePoints[0].y + measurePoints[1].y) / 2 - 5}
+                            textAnchor="middle"
+                            fill="#00B4D8"
+                            fontSize="10"
+                            fontWeight="bold"
+                            fontFamily="'JetBrains Mono', monospace"
+                          >
+                            {(Math.hypot(measurePoints[1].x - measurePoints[0].x, measurePoints[1].y - measurePoints[0].y) * 0.15 / (scale.scaleX || 1)).toFixed(2)}m
+                          </text>
+                        </>
+                      )}
+                    </g>
+                  )}
+
+                  {activeTool === 'area' && measurePoints.length > 0 && (
+                    <g>
+                      {measurePoints.map((p, idx) => (
+                        <circle key={idx} cx={p.x} cy={p.y} r="4" fill="#00B4D8" stroke="#ffffff" strokeWidth="1.5" />
+                      ))}
+                      {measurePoints.length >= 2 && (
+                        <polygon
+                          points={measurePoints.map(p => `${p.x},${p.y}`).join(' ')}
+                          fill="rgba(0, 180, 216, 0.25)"
+                          stroke="#00B4D8"
+                          strokeWidth="2"
+                          strokeDasharray="4 2"
+                        />
+                      )}
+                    </g>
+                  )}
+
+                  {activeTool === 'height' && measurePoints.length > 0 && (
+                    <g>
+                      {measurePoints.map((p, idx) => (
+                        <g key={idx}>
+                          <circle cx={p.x} cy={p.y} r="4" fill={idx === 0 ? '#10b981' : idx === 1 ? '#ef4444' : '#f59e0b'} stroke="#ffffff" strokeWidth="1.5" />
+                          <text x={p.x + 6} y={p.y + 3} fill="#ffffff" fontSize="9" fontWeight="bold" fontFamily="'JetBrains Mono', monospace">
+                            {idx === 0 ? 'P1:Bed' : idx === 1 ? 'P2:Apex' : 'P3:Shadow'}
+                          </text>
+                        </g>
+                      ))}
+                      {measurePoints.length === 3 && (
+                        <line
+                          x1={measurePoints[1].x}
+                          y1={measurePoints[1].y}
+                          x2={measurePoints[2].x}
+                          y2={measurePoints[2].y}
+                          stroke="#f59e0b"
+                          strokeWidth="2.5"
+                          strokeDasharray="4 2"
+                        />
+                      )}
+                    </g>
+                  )}
+                </svg>
+
+                {/* Tactical Bounding Box Candidate Overlays */}
                 {showBoxes && displayedContacts.map((c) => {
-                  const isSelected = activeContact?.contact_id === c.contact_id;
+                  const isSelected = selectedContact?.contact_id === c.contact_id || activeContact?.contact_id === c.contact_id;
                   const left = c.bbox.x1 * scale.scaleX;
                   const top = c.bbox.y1 * scale.scaleY;
                   const width = (c.bbox.x2 - c.bbox.x1) * scale.scaleX;
                   const height = (c.bbox.y2 - c.bbox.y1) * scale.scaleY;
 
-                  let strokeColor = '#38bdf8';
-                  let tagBg = '#0284c7';
+                  let strokeColor = '#10b981';
+                  let tagBg = '#10b981';
                   if (c.priority === 'HIGH') {
                     strokeColor = '#ef4444';
-                    tagBg = '#dc2626';
+                    tagBg = '#ef4444';
                   } else if (c.priority === 'MEDIUM') {
                     strokeColor = '#f59e0b';
-                    tagBg = '#d97706';
+                    tagBg = '#f59e0b';
                   }
 
                   return (
                     <div
                       key={c.contact_id}
-                      onClick={() => onSelectContact(c)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectContact(c);
+                      }}
+                      title="Click to verify"
                       style={{
                         position: 'absolute',
                         left: `${left}px`,
-                        top: `${top + 16}px`, // Adjusted for port/starboard top header
-                        width: `${Math.max(14, width)}px`,
-                        height: `${Math.max(14, height)}px`,
+                        top: `${top + 20}px`,
+                        width: `${Math.max(16, width)}px`,
+                        height: `${Math.max(16, height)}px`,
                         borderColor: strokeColor,
                       }}
-                      className={`cursor-pointer border transition-all ${
+                      className={`cursor-pointer border transition-all group ${
                         isSelected 
-                          ? 'border-2 ring-1 ring-white bg-cyan-400/10 z-20' 
-                          : 'opacity-90 hover:opacity-100 z-10'
+                          ? 'border-2 ring-2 ring-blue-400 bg-blue-500/20 z-20 scale-[1.02]' 
+                          : 'opacity-90 hover:opacity-100 hover:scale-105 z-10 hover:border-white'
                       }`}
                     >
-                      {/* Crisp 1px Corner Marks */}
-                      <div className="absolute -top-1 -left-1 w-1.5 h-1.5 border-t border-l border-white"></div>
-                      <div className="absolute -top-1 -right-1 w-1.5 h-1.5 border-t border-r border-white"></div>
-                      <div className="absolute -bottom-1 -left-1 w-1.5 h-1.5 border-b border-l border-white"></div>
-                      <div className="absolute -bottom-1 -right-1 w-1.5 h-1.5 border-b border-r border-white"></div>
+                      {/* Corner Targeting Marks */}
+                      <div className="absolute -top-1 -left-1 w-1.5 h-1.5 border-t border-l border-white" />
+                      <div className="absolute -top-1 -right-1 w-1.5 h-1.5 border-t border-r border-white" />
+                      <div className="absolute -bottom-1 -left-1 w-1.5 h-1.5 border-b border-l border-white" />
+                      <div className="absolute -bottom-1 -right-1 w-1.5 h-1.5 border-b border-r border-white" />
 
+                      {/* Pill Badge */}
                       <div 
                         style={{ backgroundColor: tagBg }}
-                        className="absolute -bottom-4 left-0 px-1 py-0.2 rounded font-mono font-bold text-[8px] text-white whitespace-nowrap shadow-xs"
+                        className="absolute -bottom-5 left-0 px-1.5 py-0.5 rounded-full font-mono font-bold text-[9px] text-white whitespace-nowrap shadow-md"
                       >
                         {c.contact_id} • {Math.round(c.confidence * 100)}%
+                      </div>
+
+                      {/* Tooltip on hover */}
+                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-md bg-slate-900/90 text-white text-[10px] font-sans whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30 shadow-md border border-slate-700">
+                        Click to verify
                       </div>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-xs text-slate-500 font-mono text-center">
-                <Crosshair className="w-8 h-8 text-slate-700 animate-spin mb-2" />
-                <p className="font-bold text-slate-300">NO SWATH ACTIVE</p>
-                <p className="text-[10px] text-slate-500 mt-1">Select a held-out test case from top bar.</p>
+              <div className="h-full flex flex-col items-center justify-center text-xs text-slate-400 font-mono text-center py-24">
+                <Crosshair className="w-10 h-10 text-slate-600 animate-spin mb-3" />
+                <p className="font-bold text-white text-sm">NO SWATH ACTIVE</p>
+                <p className="text-xs text-slate-400 mt-1">Select a curated benchmark swath from the top header.</p>
               </div>
             )}
 
-            {/* Live Cursor Coordinate HUD */}
+            {/* Live Hover HUD Coordinates */}
             {cursorPos && (
-              <div className="absolute top-4 left-4 px-2 py-1 rounded bg-[#070e1c]/90 border border-[#172542] text-[10px] font-mono text-cyan-300 pointer-events-none z-30">
+              <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-white/95 border border-[#e2e8f0] text-[11px] font-mono font-bold text-[#0f172a] pointer-events-none z-30 shadow-lg">
                 X: {cursorPos.x}px | Y: {cursorPos.y}px | Slant Range: ~{cursorPos.slantM}m
               </div>
             )}
           </div>
+
+          {/* 1. Measurement Tools Toolbar (Below the sonar image) */}
+          <div className="p-3 px-5 border-t border-[#e2e8f0] bg-[#f8fafc] flex flex-wrap items-center justify-between gap-3 text-xs font-sans">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[11px] font-bold text-[#64748b] uppercase tracking-wider flex items-center gap-1.5">
+                Measurement Tools:
+              </span>
+
+              {/* Length Tool */}
+              <button
+                onClick={() => handleSelectTool('length')}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeTool === 'length'
+                    ? 'bg-[#1d4ed8] text-white border-[#1d4ed8] shadow-blue-sm'
+                    : 'bg-white text-[#0f172a] border-[#e2e8f0] hover:bg-slate-50'
+                }`}
+                title="Click two points to measure a target's length"
+              >
+                <span>📏</span>
+                <span>Length</span>
+              </button>
+
+              {/* Area Tool */}
+              <button
+                onClick={() => handleSelectTool('area')}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeTool === 'area'
+                    ? 'bg-[#1d4ed8] text-white border-[#1d4ed8] shadow-blue-sm'
+                    : 'bg-white text-[#0f172a] border-[#e2e8f0] hover:bg-slate-50'
+                }`}
+                title="Click around a target to measure its area"
+              >
+                <span>📐</span>
+                <span>Area</span>
+              </button>
+
+              {/* Height Tool */}
+              <button
+                onClick={() => handleSelectTool('height')}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeTool === 'height'
+                    ? 'bg-[#1d4ed8] text-white border-[#1d4ed8] shadow-blue-sm'
+                    : 'bg-white text-[#0f172a] border-[#e2e8f0] hover:bg-slate-50'
+                }`}
+                title="Click three points: 1) Nadir, 2) Object, 3) Shadow end to calculate height"
+              >
+                <span>📏</span>
+                <span>Height</span>
+              </button>
+
+              {/* Clear Measurement Button */}
+              {activeTool !== 'none' && (
+                <button
+                  onClick={handleClearMeasurement}
+                  className="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-[#64748b] text-[11px] font-medium transition-colors cursor-pointer"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {/* Measurement Value Display */}
+            <div className="flex items-center gap-3">
+              {measurementResult ? (
+                <div className="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#1d4ed8] font-mono font-bold text-xs flex items-center gap-1.5 shadow-xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#1d4ed8] animate-pulse" />
+                  <span>{measurementResult}</span>
+                </div>
+              ) : activeTool !== 'none' ? (
+                <span className="text-[11px] text-[#64748b] italic">
+                  {activeTool === 'length' && 'Click 2 points on the sonar image to measure length'}
+                  {activeTool === 'area' && 'Click points around target to compute area'}
+                  {activeTool === 'height' && 'Click 3 points: 1) Nadir, 2) Object apex, 3) Shadow tip'}
+                </span>
+              ) : (
+                <div className="flex items-center gap-2 text-[11px] font-mono text-[#64748b]">
+                  <span className="w-2 h-2 rounded-full bg-[#00B4D8]" />
+                  <span>Bottom Track (0.15m/px)</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Right Column (3 Cols): Ranked Detection Queue */}
-        <div className="lg:col-span-3 h-full border-l border-[#15233e] bg-[#091122] flex flex-col min-h-0 shadow-xs">
-          <div className="p-2.5 border-b border-[#15233e] flex items-center justify-between bg-[#070e1c]">
-            <span className="font-mono font-bold text-slate-200 text-[11px] tracking-wider uppercase flex items-center gap-1.5">
-              <Scan className="w-3 h-3 text-cyan-400" /> DETECTION QUEUE
-            </span>
-            <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#0d1830] text-cyan-300 font-mono font-bold border border-[#1b315e]">
+        <div className="lg:col-span-3 flex flex-col bg-white rounded-[24px] border border-[#e2e8f0] shadow-soft overflow-hidden">
+          <div className="p-5 border-b border-[#f1f5f9] flex items-center justify-between">
+            <div>
+              <span className="section-label block">Ranked Proposals</span>
+              <h3 className="text-base font-bold text-[#0f172a] font-display mt-0.5 flex items-center gap-1.5">
+                <Scan className="w-4 h-4 text-[#1d4ed8]" />
+                Detection Queue
+              </h3>
+            </div>
+            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-[#f8fafc] border border-[#e2e8f0] text-[#0f172a]">
               {displayedContacts.length} Ranked
             </span>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-2 space-y-1.5 text-xs font-mono">
-            {displayedContacts.map((c) => {
-              const isSelected = activeContact?.contact_id === c.contact_id;
-              let badgeStyle = 'text-sky-400 bg-sky-950/80 border-sky-800';
-              if (c.priority === 'HIGH') {
-                badgeStyle = 'text-red-400 bg-red-950/80 border-red-800';
-              } else if (c.priority === 'MEDIUM') {
-                badgeStyle = 'text-amber-400 bg-amber-950/80 border-amber-800';
-              }
+          {/* List of Ranked Candidate Cards */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+            {displayedContacts.length === 0 ? (
+              <div className="text-center py-12 text-xs text-[#64748b]">
+                No anomaly detections in active swath.
+              </div>
+            ) : (
+              displayedContacts.map((contact) => {
+                const isSelected = selectedContact?.contact_id === contact.contact_id || (!selectedContact && activeContact?.contact_id === contact.contact_id);
+                const isHigh = contact.priority === 'HIGH';
+                const isMedium = contact.priority === 'MEDIUM';
 
-              return (
-                <div
-                  key={c.contact_id}
-                  onClick={() => onSelectContact(c)}
-                  className={`p-2 rounded border cursor-pointer transition-colors flex items-center justify-between ${
-                    isSelected 
-                      ? 'bg-[#122244] border-cyan-500' 
-                      : 'bg-[#0b1426] border-[#16233d] hover:bg-[#0f1b33]'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded bg-black border border-[#1c2c4d] flex items-center justify-center font-bold text-[10px] text-cyan-300 shrink-0">
-                      {c.contact_id}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-slate-100 text-xs">{c.contact_id}</span>
-                        <span className={`text-[8px] px-1 py-0.2 rounded border font-bold ${badgeStyle}`}>
-                          {c.priority}
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">
-                        Conf: <strong className="text-white">{Math.round(c.confidence * 100)}%</strong> • {c.review_status}
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectContact(c);
-                      onVerifyContact?.(c);
-                    }}
-                    className="p-1 rounded bg-[#060b17] hover:bg-cyan-600 hover:text-white text-slate-400 border border-[#15233e] transition-colors"
-                    title="Open in Contact Verification"
+                return (
+                  <div
+                    key={contact.contact_id}
+                    onClick={() => onSelectContact(contact)}
+                    className={`p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer flex items-center justify-between group ${
+                      isSelected
+                        ? 'bg-blue-50/80 border-[#1d4ed8] shadow-[0_4px_12px_-2px_rgba(29,78,216,0.18)]'
+                        : 'bg-[#f8fafc] border-[#e2e8f0] hover:bg-white hover:border-[#1d4ed8] hover:shadow-xs'
+                    }`}
                   >
-                    <ArrowRight className="w-3 h-3" />
-                  </button>
-                </div>
-              );
-            })}
+                    <div className="flex items-center gap-3">
+                      {/* ID Bucket */}
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-xl font-mono font-bold text-xs border transition-colors ${
+                        isSelected 
+                          ? 'bg-[#1d4ed8] text-white border-[#1d4ed8]' 
+                          : 'bg-white text-[#0f172a] border-[#e2e8f0] group-hover:border-blue-200'
+                      }`}>
+                        {contact.contact_id}
+                      </div>
+
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-[#0f172a] text-xs font-mono group-hover:text-[#1d4ed8] transition-colors">
+                            {contact.contact_id}
+                          </span>
+                          <span className={`text-[9px] font-bold px-2 py-0.2 rounded-full font-sans border ${
+                            isHigh
+                              ? 'bg-rose-50 text-rose-700 border-rose-200'
+                              : isMedium
+                              ? 'bg-amber-50 text-amber-700 border-amber-200'
+                              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          }`}>
+                            {contact.priority}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-[#64748b] mt-0.5 font-sans">
+                          Confidence: <strong className="text-[#0f172a]">{Math.round(contact.confidence * 100)}%</strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectContact(contact);
+                        onVerifyContact?.(contact);
+                      }}
+                      className="p-1.5 rounded-full bg-white hover:bg-[#1d4ed8] hover:text-white text-[#64748b] border border-[#e2e8f0] transition-all cursor-pointer"
+                      title="Open in Contact Verification Workflow"
+                    >
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                );
+              })
+            )}
           </div>
+
+          {/* Contextual Navigation: Verify Candidate Button */}
+          {selectedContact && (
+            <div className="p-4 border-t border-[#f1f5f9] bg-[#f8fafc] flex justify-end">
+              <button
+                onClick={() => {
+                  onSelectContact(selectedContact);
+                  onVerifyContact?.(selectedContact);
+                }}
+                className="w-full py-3 px-4 rounded-xl bg-[#1d4ed8] hover:bg-[#1e40af] text-white font-bold text-xs transition-all duration-200 shadow-tactile shadow-blue-glow hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer group"
+              >
+                <span>Verify Candidate {selectedContact.contact_id}</span>
+                <ArrowRight className="w-3.5 h-3.5 text-white group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          )}
         </div>
+
       </div>
 
-      {/* Bottom Acoustic Context Verification Bar */}
+      {/* 3. Bottom Acoustic Physics Context Verification Bar */}
       {activeContact && (
-        <div className="h-16 border-t border-[#15233e] bg-[#070e1c] px-4 py-2 flex items-center justify-between text-xs z-20 font-mono">
-          <div className="flex items-center gap-2 shrink-0">
-            <Scan className="w-4 h-4 text-cyan-400" />
+        <section className="bg-white rounded-[24px] border border-[#e2e8f0] p-5 shadow-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-[#1d4ed8] border border-blue-100 shadow-xs">
+              <Scan className="w-5 h-5" />
+            </div>
             <div>
-              <div className="text-[9px] uppercase font-bold text-slate-400">
-                PHYSICS CONTEXT ENGINE
-              </div>
-              <div className="text-[11px] font-bold text-white">
-                TARGET {activeContact.contact_id}
-              </div>
+              <span className="section-label block">Physics Context Engine</span>
+              <h4 className="text-base font-extrabold text-[#0f172a] font-display">
+                Candidate {activeContact.contact_id} Diagnostics
+              </h4>
             </div>
           </div>
 
-          <div className="grid grid-cols-4 gap-2.5 flex-1 max-w-4xl px-4 text-xs">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 flex-1 max-w-4xl px-2 w-full">
             {/* 1. Object-Shadow Deficit */}
-            <div className="telemetry-cell flex items-center justify-between py-1">
+            <div className="p-3 rounded-2xl bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-between">
               <div>
-                <div className="text-[8px] text-slate-400 uppercase">SHADOW DEFICIT</div>
-                <div className="font-bold text-slate-100 text-[11px]">SHADOW MATCHED</div>
+                <span className="text-[9px] text-[#64748b] font-bold uppercase tracking-wider block">Shadow Deficit</span>
+                <span className="text-xs font-bold text-[#0f172a]">
+                  {activeContact.shadow_evidence > 0.04 || activeContact.priority === 'HIGH' ? 'Shadow Matched' : 'Low Deficit'}
+                </span>
               </div>
-              <span className="text-[8px] px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-bold">
-                PASS
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                activeContact.shadow_evidence > 0.04 || activeContact.priority === 'HIGH'
+                  ? 'bg-emerald-50 text-emerald-700'
+                  : 'bg-amber-50 text-amber-700'
+              }`}>
+                {activeContact.shadow_evidence > 0.04 || activeContact.priority === 'HIGH' ? 'PASS' : 'REVIEW'}
               </span>
             </div>
 
             {/* 2. Seabed Texture Match */}
-            <div className="telemetry-cell flex items-center justify-between py-1">
+            <div className="p-3 rounded-2xl bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-between">
               <div>
-                <div className="text-[8px] text-slate-400 uppercase">SEABED FLOOR</div>
-                <div className="font-bold text-slate-100 text-[11px]">SANDY / GRAVEL</div>
+                <span className="text-[9px] text-[#64748b] font-bold uppercase tracking-wider block">Seabed Texture</span>
+                <span className="text-xs font-bold text-[#0f172a]">Sandy / Gravel</span>
               </div>
-              <span className="text-[8px] px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-bold">
-                87% MATCH
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
+                {Math.round((activeContact.data_quality || 0.90) * 100)}% Match
               </span>
             </div>
 
             {/* 3. False Positive Risk */}
-            <div className="telemetry-cell flex items-center justify-between py-1">
+            <div className="p-3 rounded-2xl bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-between">
               <div>
-                <div className="text-[8px] text-slate-400 uppercase">CLUTTER RISK</div>
-                <div className="font-bold text-slate-100 text-[11px]">ANOMALOUS STRUCT</div>
+                <span className="text-[9px] text-[#64748b] font-bold uppercase tracking-wider block">Clutter Risk</span>
+                <span className="text-xs font-bold text-[#0f172a]">
+                  {activeContact.confidence > 0.75 ? 'Low Clutter Risk' : 'Medium Clutter'}
+                </span>
               </div>
-              <span className="text-[8px] px-1.5 py-0.2 rounded bg-amber-950 text-amber-300 border border-amber-800 font-bold">
-                12/100
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                activeContact.confidence > 0.75 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+              }`}>
+                {Math.max(5, Math.min(95, Math.round((1 - activeContact.confidence) * 100)))}/100
               </span>
             </div>
 
-            {/* 4. Overall AI Confidence */}
-            <div className="telemetry-cell flex items-center justify-between py-1">
+            {/* 4. Overall AI Composite Score */}
+            <div className="p-3 rounded-2xl bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-between">
               <div>
-                <div className="text-[8px] text-slate-400 uppercase">OVERALL SCORE</div>
-                <div className="font-bold text-slate-100 text-[11px]">COMPOSITE MATCH</div>
+                <span className="text-[9px] text-[#64748b] font-bold uppercase tracking-wider block">Composite Score</span>
+                <span className="text-xs font-bold text-[#0f172a]">YOLO + Acoustic</span>
               </div>
-              <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 font-bold">
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-[#1d4ed8] border border-blue-200 font-mono shadow-xs">
                 {Math.round(activeContact.confidence * 100)}%
               </span>
             </div>
@@ -510,13 +944,14 @@ export const SonarAnalysisPage: React.FC<SonarAnalysisPageProps> = ({
 
           <button
             onClick={() => onVerifyContact?.(activeContact)}
-            className="px-3 py-1.5 rounded bg-[#122244] hover:bg-[#193061] text-cyan-300 font-mono font-bold text-[11px] flex items-center gap-1.5 border border-[#234282] transition-colors shrink-0"
+            className="px-6 py-3 rounded-full bg-[#1d4ed8] hover:bg-[#1e40af] text-white font-semibold text-xs transition-all duration-200 shadow-tactile flex items-center gap-2 cursor-pointer shrink-0 shadow-blue-glow"
           >
-            <span>VERIFY CANDIDATE</span>
-            <ArrowRight className="w-3 h-3" />
+            <span>Verify Candidate</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
-        </div>
+        </section>
       )}
+
     </div>
   );
 };

@@ -1,227 +1,252 @@
-import React, { useState, useEffect } from 'react';
-import { Anchor, ShieldCheck, Activity, Info, ChevronDown, Search, Radio, Clock, Database, Terminal, Cpu } from 'lucide-react';
-import { apiService } from '../../services/api';
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  Sparkles, 
+  Upload, 
+  Play, 
+  ChevronDown,
+  Check
+} from 'lucide-react';
+import { SurveyUploadResponse } from '../../types/detection';
 
 interface HeaderProps {
-  surveyId?: string;
+  survey: SurveyUploadResponse | null;
+  analyzing: boolean;
+  onRunAnalysis: () => void;
+  onCustomUploadClick: () => void;
   onLoadDemoSample: (sampleId: string) => void;
-  onCustomUploadClick?: () => void;
+  activeScreen: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  surveyId,
+  survey,
+  analyzing,
+  onRunAnalysis,
+  onCustomUploadClick,
   onLoadDemoSample,
-  onCustomUploadClick
+  activeScreen,
 }) => {
-  const [backendStatus, setBackendStatus] = useState<'online' | 'offline' | 'checking'>('checking');
-  const [showDisclaimer, setShowDisclaimer] = useState<boolean>(false);
-  const [showDemoMenu, setShowDemoMenu] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [utcTime, setUtcTime] = useState<string>('');
+  const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setUtcTime(now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC');
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  const demoSamples = [
+    { 
+      id: 'viator_04', 
+      label: 'Viator-04', 
+      badge: 'True Wreck', 
+      desc: 'Shipwreck True Positive with acoustic shadow',
+      badgeColor: 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+    },
+    { 
+      id: 'corsican_02', 
+      label: 'Corsican-02', 
+      badge: 'Verified', 
+      desc: 'Held-out Target verification swath',
+      badgeColor: 'bg-blue-50 text-blue-700 border border-blue-200' 
+    },
+    { 
+      id: 'artificial_reef_02', 
+      label: 'Artificial Reef', 
+      badge: 'Clutter', 
+      desc: 'Geological Clutter & natural seabed',
+      badgeColor: 'bg-amber-50 text-amber-700 border border-amber-200' 
+    },
+    { 
+      id: 'survey_001', 
+      label: 'Survey-001', 
+      badge: 'Nav Track', 
+      desc: 'Towfish Nav Track with spatial trajectory',
+      badgeColor: 'bg-indigo-50 text-indigo-700 border border-indigo-200' 
+    },
+  ];
 
+  // Close dropdown on click outside or escape key
   useEffect(() => {
-    const check = async () => {
-      const res = await apiService.checkHealth();
-      setBackendStatus(res.status === 'healthy' ? 'online' : 'offline');
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
     };
-    check();
-    const interval = setInterval(check, 20000);
-    return () => clearInterval(interval);
-  }, []);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setDropdownOpen(false);
+      }
+    };
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [dropdownOpen]);
+
+  const activeSample = demoSamples.find((sample) => 
+    survey?.filename.toLowerCase().includes(sample.id.replace('_', ''))
+  );
+
+  const screenTitleMap: Record<string, string> = {
+    'dashboard': 'Dashboard Overview',
+    'sonar-analysis': 'Sonar Waterfall',
+    'contact-verification': 'Contact Triage',
+    'gis-mapping': 'GIS Mapping & Spatial',
+    'ai-pipeline': 'Pipeline Monitor',
+    'reports': 'Reports & Export',
+  };
+
+  const currentTitle = screenTitleMap[activeScreen] || 'Dashboard Overview';
 
   return (
-    <header className="h-12 border-b border-[#172542] bg-[#091122] px-4 flex items-center justify-between z-30 select-none font-sans">
+    <header className="h-20 bg-white border-b border-[#e2e8f0] px-8 flex items-center justify-between sticky top-0 z-30 shadow-soft shrink-0">
       
-      {/* Brand & System Station Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-7 h-7 rounded bg-[#132242] border border-[#233b6e] flex items-center justify-center text-cyan-400 font-mono font-bold text-xs shadow-xs">
-          <Anchor className="w-4 h-4 stroke-[2.2]" />
-        </div>
-        <div className="flex items-center gap-2.5">
-          <span className="font-mono font-bold text-sm tracking-wider text-slate-100">
-            SONAR-INTEL
-          </span>
-          <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#0d1830] text-cyan-400 font-mono font-bold border border-[#1b315e] uppercase">
-            STATION 01 • MoES
-          </span>
+      {/* Left: Breadcrumbs & Live Status */}
+      <div className="flex items-center gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-bold text-[#64748b] uppercase tracking-wider font-sans">
+              MISSION INTELLIGENCE
+            </span>
+            <span className="text-[#cbd5e1]">/</span>
+            <span className="text-[11px] font-bold text-[#1d4ed8] uppercase tracking-wider font-sans">
+              {currentTitle}
+            </span>
+          </div>
+          <h1 className="text-xl font-extrabold text-[#0f172a] font-display tracking-tight flex items-center gap-2.5 mt-0.5">
+            <span>{currentTitle}</span>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-sans font-semibold px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              API Connected
+            </span>
+          </h1>
         </div>
       </div>
 
-      {/* Center Search / Coordinates Query Box */}
-      <div className="hidden md:flex items-center relative w-80 lg:w-[420px]">
-        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Query target ID (C001), ping index, or GPS coordinate..."
-          className="w-full pl-8 pr-3 py-1 text-xs bg-[#050a14] border border-[#172542] rounded text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 font-mono text-[11px]"
-        />
-      </div>
-
-      {/* Right Telemetry: UTC Clock, Curated Demos, Model & Sensor Link */}
-      <div className="flex items-center gap-3 text-xs font-mono">
+      {/* Right Actions: Benchmarks & CTAs */}
+      <div className="flex items-center gap-3 sm:gap-4">
         
-        {/* Live System UTC Clock */}
-        <div className="hidden xl:flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#050a14] border border-[#142038] text-[11px] text-slate-400">
-          <Clock className="w-3 h-3 text-slate-400" />
-          <span>{utcTime || '2026-09-02 22:30:00 UTC'}</span>
-        </div>
-
-        {/* Curated Demo Swath Selector */}
-        <div className="relative">
+        {/* Benchmark Dropdown Selector */}
+        <div className="relative" ref={dropdownRef}>
           <button
-            onClick={() => setShowDemoMenu(!showDemoMenu)}
-            className="px-2.5 py-1 text-xs font-mono font-medium rounded bg-[#101b33] hover:bg-[#162647] text-slate-200 border border-[#1d3057] transition-colors flex items-center gap-1.5"
+            type="button"
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className={`h-10 px-3.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all duration-200 shadow-tactile cursor-pointer ${
+              dropdownOpen
+                ? 'bg-blue-50 border-blue-300 text-[#1d4ed8]'
+                : 'bg-[#f8fafc] hover:bg-slate-100 border-[#e2e8f0] text-[#0f172a]'
+            }`}
+            aria-expanded={dropdownOpen}
+            aria-haspopup="true"
           >
-            <Activity className="w-3.5 h-3.5 text-amber-400" />
-            <span>Curated Swaths</span>
-            <ChevronDown className="w-3 h-3 text-slate-400 ml-0.5" />
+            <div className="flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-[#1d4ed8]" />
+              <span className="font-semibold font-sans">Benchmarks</span>
+            </div>
+
+            {activeSample && (
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#1d4ed8] text-white shadow-xs max-w-[110px] truncate">
+                {activeSample.label}
+              </span>
+            )}
+
+            <ChevronDown 
+              className={`w-3.5 h-3.5 text-[#64748b] transition-transform duration-200 ${
+                dropdownOpen ? 'rotate-180 text-[#1d4ed8]' : ''
+              }`} 
+            />
           </button>
 
-          {showDemoMenu && (
-            <div className="absolute right-0 top-9 w-84 bg-[#0a1224] border border-[#1f3561] rounded shadow-2xl p-2 z-50 text-xs space-y-1">
-              <div className="px-2 py-1 text-[9px] uppercase text-slate-400 font-mono font-bold border-b border-[#142240] flex justify-between">
-                <span>HELD-OUT TEST SUITES</span>
-                <span className="text-cyan-400">BENCHMARKS</span>
+          {/* Dropdown Menu listing all benchmark options */}
+          {dropdownOpen && (
+            <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl border border-[#e2e8f0] shadow-xl z-50 p-2 animate-in fade-in slide-in-from-top-1 duration-150">
+              <div className="px-3 py-2 border-b border-[#f1f5f9] mb-1.5 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748b]">
+                    Curated Benchmarks
+                  </span>
+                  <p className="text-[11px] text-[#94a3b8]">
+                    Select a held-out dataset
+                  </p>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-[#1d4ed8] border border-blue-100">
+                  {demoSamples.length} Swaths
+                </span>
               </div>
 
-              <button
-                onClick={() => {
-                  onLoadDemoSample('viator_04');
-                  setShowDemoMenu(false);
-                }}
-                className="w-full text-left p-2 rounded hover:bg-[#111e38] transition-colors border border-transparent hover:border-[#1d335e]"
-              >
-                <div className="font-mono font-bold text-slate-100 flex items-center justify-between text-xs">
-                  <span>Viator-04 (True Shipwreck)</span>
-                  <span className="text-[9px] px-1 py-0.2 rounded bg-red-950 text-red-300 border border-red-800 font-mono">HIGH CONF</span>
-                </div>
-                <div className="text-[10px] text-slate-400 mt-0.5 font-sans">
-                  Prominent hull highlight & down-range acoustic shadow void (83% YOLOv8).
-                </div>
-              </button>
+              <div className="flex flex-col gap-1">
+                {demoSamples.map((sample) => {
+                  const isSelected = survey?.filename.toLowerCase().includes(sample.id.replace('_', ''));
+                  return (
+                    <button
+                      key={sample.id}
+                      onClick={() => {
+                        onLoadDemoSample(sample.id);
+                        setDropdownOpen(false);
+                      }}
+                      className={`w-full text-left p-2.5 rounded-xl text-xs font-semibold transition-all duration-150 flex items-center justify-between gap-3 cursor-pointer ${
+                        isSelected
+                          ? 'bg-blue-50/90 text-[#1d4ed8] border border-blue-200/80'
+                          : 'hover:bg-[#f8fafc] text-[#0f172a] border border-transparent'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                          isSelected ? 'bg-[#1d4ed8] text-white' : 'bg-slate-100 text-[#64748b]'
+                        }`}>
+                          <Sparkles className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-xs truncate">{sample.label}</span>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold shrink-0 ${
+                              sample.badgeColor
+                            }`}>
+                              {sample.badge}
+                            </span>
+                          </div>
+                          <div className="text-[11px] font-normal text-[#64748b] truncate">
+                            {sample.desc}
+                          </div>
+                        </div>
+                      </div>
 
-              <button
-                onClick={() => {
-                  onLoadDemoSample('corsican_02');
-                  setShowDemoMenu(false);
-                }}
-                className="w-full text-left p-2 rounded hover:bg-[#111e38] transition-colors border border-transparent hover:border-[#1d335e]"
-              >
-                <div className="font-mono font-bold text-slate-100 flex items-center justify-between text-xs">
-                  <span>Corsican-02 (Verified Anomaly)</span>
-                  <span className="text-[9px] px-1 py-0.2 rounded bg-amber-950 text-amber-300 border border-amber-800 font-mono">TARGET</span>
-                </div>
-                <div className="text-[10px] text-slate-400 mt-0.5 font-sans">
-                  Verified structural anomaly matching ground-truth held-out label.
-                </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  onLoadDemoSample('artificial_reef_02');
-                  setShowDemoMenu(false);
-                }}
-                className="w-full text-left p-2 rounded hover:bg-[#111e38] transition-colors border border-transparent hover:border-[#1d335e]"
-              >
-                <div className="font-mono font-bold text-slate-100 flex items-center justify-between text-xs">
-                  <span>Artificial-Reef-02 (Clutter)</span>
-                  <span className="text-[9px] px-1 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">CLUTTER</span>
-                </div>
-                <div className="text-[10px] text-slate-400 mt-0.5 font-sans">
-                  Geological reef ridges for human-in-the-loop false positive rejection.
-                </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  onLoadDemoSample('survey_001');
-                  setShowDemoMenu(false);
-                }}
-                className="w-full text-left p-2 rounded hover:bg-[#111e38] transition-colors border border-transparent hover:border-[#1d335e]"
-              >
-                <div className="font-mono font-bold text-slate-100 flex items-center justify-between text-xs">
-                  <span>Survey-001 (Nav Log Ref)</span>
-                  <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-mono">GPS SYNC</span>
-                </div>
-                <div className="text-[10px] text-slate-400 mt-0.5 font-sans">
-                  Swath with towfish heading log for WGS-84 dead-reckoning projection.
-                </div>
-              </button>
-
-              {onCustomUploadClick && (
-                <div className="pt-1 border-t border-[#142240]">
-                  <button
-                    onClick={() => {
-                      onCustomUploadClick();
-                      setShowDemoMenu(false);
-                    }}
-                    className="w-full text-center py-1.5 rounded bg-[#0d172e] hover:bg-[#142347] text-cyan-300 text-[11px] font-mono font-bold border border-[#1e3463] transition-colors"
-                  >
-                    + INGEST CUSTOM SSS LOG...
-                  </button>
-                </div>
-              )}
+                      {isSelected && (
+                        <div className="w-5 h-5 rounded-md bg-[#1d4ed8] text-white flex items-center justify-center shrink-0 shadow-xs">
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
 
-        {/* Model Identifier */}
-        <div className="hidden lg:flex items-center gap-1 px-2 py-0.5 rounded bg-[#050a14] border border-[#142038] text-[11px] text-slate-400">
-          <span>YOLOv8n-Baseline</span>
-          <span className="text-[9px] text-cyan-400">(FP16)</span>
-        </div>
-
-        {/* Operational Disclaimer Modal Trigger */}
+        {/* Custom Upload CTA */}
         <button
-          onClick={() => setShowDisclaimer(!showDisclaimer)}
-          className="p-1 rounded text-slate-400 hover:text-slate-200 hover:bg-[#121e38] transition-colors"
-          title="Scientific Scope & Honesty Details"
+          onClick={onCustomUploadClick}
+          className="h-10 px-4 rounded-xl bg-white hover:bg-slate-50 text-[#0f172a] border border-[#e2e8f0] font-semibold text-xs flex items-center gap-2 transition-all duration-200 shadow-tactile cursor-pointer"
         >
-          <Info className="w-3.5 h-3.5" />
+          <Upload className="w-3.5 h-3.5 text-[#64748b]" />
+          <span>Upload Swath</span>
         </button>
 
-        {/* Sensor & Backend Link Telemetry */}
-        <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-[#050a14] border border-[#142038] text-[11px] text-emerald-400 font-mono font-bold">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-          <span>{backendStatus === 'online' ? 'LINK 200 OK' : 'LINK DOWN'}</span>
-        </div>
+        {/* Primary Action Button: Run Inference */}
+        <button
+          onClick={onRunAnalysis}
+          disabled={!survey || analyzing}
+          className={`h-10 px-5 rounded-xl font-semibold text-xs flex items-center gap-2 transition-all duration-200 shadow-tactile ${
+            analyzing
+              ? 'bg-slate-200 text-[#64748b] cursor-wait'
+              : survey
+              ? 'bg-[#1d4ed8] hover:bg-[#1e40af] text-white hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-blue-glow'
+              : 'bg-slate-100 text-[#64748b] cursor-not-allowed'
+          }`}
+        >
+          <Play className="w-3.5 h-3.5 fill-current" />
+          <span>{analyzing ? 'Inference Running...' : 'Run AI Detection'}</span>
+        </button>
       </div>
-
-      {/* Scientific Disclaimer Modal */}
-      {showDisclaimer && (
-        <div className="absolute top-12 right-4 w-96 bg-[#0a1224] border border-[#1f3561] rounded p-4 shadow-2xl z-50 text-xs text-slate-300 font-sans">
-          <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[#142240]">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span className="font-mono font-bold text-xs text-slate-100 uppercase">Operational & Scientific Scope</span>
-          </div>
-          <p className="text-slate-300 text-xs leading-relaxed mb-2">
-            SONAR-INTEL generates statistical acoustic anomaly candidates. Every proposal requires human-in-the-loop triage before logging.
-          </p>
-          <div className="p-2 rounded bg-[#050a14] border border-[#142038] text-[11px] font-mono text-slate-400 space-y-1 mb-3">
-            <div>• Measured Val mAP@50: <strong className="text-cyan-400">6.45%</strong></div>
-            <div>• Measured Frozen Test mAP@50: <strong className="text-emerald-400">10.48%</strong></div>
-            <div>• Geolocation: Dead-reckoning from towfish logs</div>
-          </div>
-          <button
-            onClick={() => setShowDisclaimer(false)}
-            className="w-full py-1 text-center bg-[#132242] hover:bg-[#1a2e59] text-slate-200 rounded text-xs font-mono font-bold transition-colors border border-[#1f376b]"
-          >
-            CLOSE
-          </button>
-        </div>
-      )}
     </header>
   );
 };

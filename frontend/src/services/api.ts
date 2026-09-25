@@ -1,7 +1,17 @@
 import axios from 'axios';
 import { Contact, SurveyUploadResponse, SurveySummary, NavWaypoint, ReviewStatus } from '../types/detection';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+const rawBase = import.meta.env.VITE_API_URL || '';
+export const API_BASE_URL = rawBase.replace(/\/+$/, '');
+
+export const resolveApiUrl = (path?: string): string => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('blob:') || path.startsWith('data:')) {
+    return path;
+  }
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return API_BASE_URL ? `${API_BASE_URL}${cleanPath}` : cleanPath;
+};
 
 const client = axios.create({
   baseURL: API_BASE_URL,
@@ -81,11 +91,15 @@ export const apiService = {
   },
 
   getRawImageUrl(surveyId: string): string {
-    return `/api/surveys/${surveyId}/image/raw`;
+    return resolveApiUrl(`/api/surveys/${surveyId}/image/raw`);
   },
 
   getProcessedImageUrl(surveyId: string): string {
-    return `/api/surveys/${surveyId}/image/processed`;
+    return resolveApiUrl(`/api/surveys/${surveyId}/image/processed`);
+  },
+
+  resolveUrl(path?: string): string {
+    return resolveApiUrl(path);
   },
 
   async getDemoSamples(): Promise<any[]> {

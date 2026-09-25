@@ -56,7 +56,7 @@ async def upload_survey(
     if nav_file and nav_file.filename:
         nav_bytes = await nav_file.read()
         if len(nav_bytes) > 0:
-            nav_dir = "data/raw"
+            nav_dir = sonar_service.raw_dir
             os.makedirs(nav_dir, exist_ok=True)
             nav_path = os.path.join(nav_dir, f"{survey_id}_nav.csv")
             with open(nav_path, "wb") as f:

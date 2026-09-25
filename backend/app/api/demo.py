@@ -21,9 +21,27 @@ from backend.app.schemas.survey import SurveyUploadResponse
 from backend.app.services.sonar_service import SonarService
 from backend.app.services.inference_service import InferenceService
 
+from backend.app.core.config import settings
+
 router = APIRouter(prefix="/api/demo", tags=["Demo"])
 sonar_service = SonarService()
 inference_service = InferenceService()
+
+def resolve_demo_file(rel_path: Optional[str]) -> Optional[str]:
+    if not rel_path:
+        return None
+    if os.path.exists(rel_path):
+        return rel_path
+    # Check relative to REPO_ROOT
+    candidate = os.path.join(str(settings.REPO_ROOT), rel_path)
+    if os.path.exists(candidate):
+        return candidate
+    # Check relative to DEMO_DATA_DIR
+    normalized = rel_path.replace("data/demo/", "").replace("data\\demo\\", "")
+    candidate2 = os.path.join(str(settings.DEMO_DATA_DIR), normalized)
+    if os.path.exists(candidate2):
+        return candidate2
+    return rel_path
 
 DEMO_SAMPLES = {
     "viator_04": {
@@ -90,18 +108,19 @@ def load_demo_sample(sample_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=f"Demo sample '{sample_id}' not found.")
 
     sample = DEMO_SAMPLES[sample_id]
-    image_path = sample["image_path"]
-    if not os.path.exists(image_path):
-        raise HTTPException(status_code=404, detail=f"Demo file '{image_path}' missing from disk.")
+    image_path = resolve_demo_file(sample["image_path"])
+    if not image_path or not os.path.exists(image_path):
+        raise HTTPException(status_code=404, detail=f"Demo file '{sample['image_path']}' missing from disk.")
 
     survey_id = f"DEMO_{sample_id.upper()}_{int(time.time() * 1000)}"
     raw_dest = os.path.join(sonar_service.raw_dir, f"{survey_id}_{sample['filename']}")
     shutil.copyfile(image_path, raw_dest)
 
     nav_dest = None
-    if sample["nav_path"] and os.path.exists(sample["nav_path"]):
+    nav_file = resolve_demo_file(sample["nav_path"])
+    if nav_file and os.path.exists(nav_file):
         nav_dest = os.path.join(sonar_service.raw_dir, f"{survey_id}_nav.csv")
-        shutil.copyfile(sample["nav_path"], nav_dest)
+        shutil.copyfile(nav_file, nav_dest)
 
     # 1. Quality & Preprocessing
     img = cv2.imread(raw_dest)

@@ -12,33 +12,42 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 Base = declarative_base()
 
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL",
-    "postgresql+psycopg://sonar_user:sonar_password@localhost:5433/sonar_intel"
-)
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+
+# Normalize Render/Heroku PostgreSQL URLs:
+# Render provides "postgres://..." or "postgresql://..." which requires psycopg driver in SQLAlchemy 2
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
+elif DATABASE_URL.startswith("postgresql://") and not DATABASE_URL.startswith("postgresql+psycopg://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
 
 # Test primary connection and fallback gracefully if needed
 engine = None
-try:
-    if "postgresql" in DATABASE_URL:
-        # Quick connect check with 2s timeout
+if DATABASE_URL and ("postgresql" in DATABASE_URL or "postgres" in DATABASE_URL):
+    try:
+        # Quick connect check with 3s timeout
         test_engine = create_engine(
             DATABASE_URL,
-            pool_pre_ping=False,
-            connect_args={"connect_timeout": 2}
+            pool_pre_ping=True,
+            connect_args={"connect_timeout": 3}
         )
         with test_engine.connect() as conn:
             pass
         engine = test_engine
         print(f"[Database] Successfully connected to PostGIS PostgreSQL database at {DATABASE_URL.split('@')[-1]}.")
-except Exception as e:
-    print(f"[Database] Primary PostGIS connection unavailable ({e}). Activating SQLite local fallback mode.")
-    engine = None
-
+    except Exception as e:
+        print(f"[Database] Primary PostGIS connection unavailable ({e}). Activating SQLite local fallback mode.")
+        engine = None
 
 if engine is None:
     # Use SQLite fallback database
-    fallback_path = os.path.join(os.path.dirname(__file__), "..", "..", "sonar_intel_fallback.db")
+    fallback_path = os.environ.get(
+        "SQLITE_PATH",
+        os.path.join(os.path.dirname(__file__), "..", "..", "sonar_intel_fallback.db")
+    )
+    fallback_dir = os.path.dirname(os.path.abspath(fallback_path))
+    if fallback_dir:
+        os.makedirs(fallback_dir, exist_ok=True)
     engine = create_engine(
         f"sqlite:///{os.path.abspath(fallback_path)}",
         connect_args={"check_same_thread": False}

@@ -91,8 +91,9 @@ Dedicated human-in-the-loop workflow allowing hydrographic surveyors to inspect 
 
 ![03 Contact Verification Triage](docs/screenshots/03_contact_verification_triage.png)
 
-* **One-Click Triage Actions**: `[Confirm Debris]`, `[False Alarm / Natural Clutter]`, and `[Needs Field Review]`.
-* **Acoustic Diagnostics**: Separate display of raw AI detector confidence, acoustic shadow deficit ratio, and towfish distance.
+* **One-Click Triage Actions**: `[Confirm Debris]`, `[False Alarm / Natural Clutter]`, and `[Needs Field Review]` with hotkeys (`1`, `2`, `3`).
+* **Operator Queue Progress Card**: Real-time breakdown of confirmed targets, pending reviews, benign clutter, and survey resolution progress.
+* **Acoustic Diagnostics**: Display of raw AI detector confidence, acoustic shadow deficit ratio, seabed backscatter floor, and bounding box metrics.
 * **Audit Trail**: Append surveyor notes and log permanent timestamps to SQLite / PostGIS storage.
 
 ---
@@ -127,6 +128,14 @@ Centralized export workstation for generating RFC 7946 GeoJSON spatial layers, t
 * **RFC 7946 GeoJSON Export**: Direct GIS vector export for QGIS, ArcGIS, and maritime ECDIS navigation systems.
 * **Tabular CSV Export**: Detailed candidate logs including pixel coordinates, WGS-84 fixes, and audit notes.
 * **Compliance Ready**: Full metadata tracking with zero coordinate fabrication (explicit `UNAVAILABLE` status when nav is absent).
+
+---
+
+### 7. Operator Profile & Identity Drawer
+Interactive slide-in user panel available from the sidebar profile card displaying hydrographer metadata, credentials, live activity metrics, and role-based access management.
+
+* **Profile Overview**: Lead Hydrographer credentials, online status, contact info, and organization attribution.
+* **Live Activity**: Active survey swath context, reviewed candidate count, confirmed contacts count, and recent activity timestamp.
 
 ---
 
@@ -181,7 +190,7 @@ Centralized export workstation for generating RFC 7946 GeoJSON spatial layers, t
 | **Deep Learning & ML** | PyTorch 2.6.0, Ultralytics YOLOv8s, OpenCV (CUDA FP16), NumPy, SciPy |
 | **Backend API** | FastAPI, Uvicorn, Pydantic v2, SQLAlchemy, Psycopg 3 |
 | **Geospatial & Storage** | PostGIS (Spatial EPSG:4326), SQLite Fallback, GeoJSON (RFC 7946), Shapely |
-| **Frontend Console** | React 18.2, TypeScript 5.2, Vite, TailwindCSS, Lucide Icons |
+| **Frontend Console** | React 18.2, TypeScript 5.2, Vite 5.4, TailwindCSS, Lucide Icons |
 | **Mapping Engine** | MapLibre GL 4.1, ESRI Ocean Bathymetry, OpenStreetMap |
 
 ---
@@ -216,11 +225,11 @@ pip install pytest httpx
 
 ### 3. Start the Frontend Console
 ```powershell
-cd frontend-new
+cd frontend
 npm install
-npm run dev -- --host 127.0.0.1 --port 5173
+npm run dev
 ```
-*Access the operations workstation at `http://127.0.0.1:5173/`.*
+*Access the operations workstation at `http://127.0.0.1:5174/` (or `http://127.0.0.1:5173/`).*
 
 ---
 

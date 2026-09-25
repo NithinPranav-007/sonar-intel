@@ -65,5 +65,6 @@ class Contact(BaseModel):
 
     model_config = {
         "from_attributes": True,
-        "populate_by_name": True
+        "populate_by_name": True,
+        "protected_namespaces": ()
     }

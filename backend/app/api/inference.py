@@ -40,6 +40,10 @@ class InferenceResponse(BaseModel):
     detections: List[DetectionItem]
     filtered_detections_count: int = Field(default=0, description="Count of detections filtered by product policy (e.g. crab_pot)")
 
+    model_config = {
+        "protected_namespaces": ()
+    }
+
 
 @router.post("/detect", response_model=InferenceResponse)
 async def detect_sonar_anomalies(
