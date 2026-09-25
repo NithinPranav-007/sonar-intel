@@ -61,7 +61,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="SONAR-INTEL API",
     description="AI-Powered Side-Scan Sonar Marine Debris & Anomaly Detection API",
-    version="1.0.0",
+    version="1.0.2",
     lifespan=lifespan
 )
 
@@ -70,6 +70,7 @@ allowed_origins_env = os.environ.get("ALLOWED_ORIGINS", "")
 frontend_url = os.environ.get("FRONTEND_URL", "")
 
 default_origins = [
+    "https://frontend-sigma-bay-90.vercel.app",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:5174",
@@ -87,14 +88,37 @@ seen = set()
 unique_origins = [x for x in origins if not (x in seen or seen.add(x))]
 allow_all = "*" in unique_origins
 
+raw_regex = os.environ.get("CORS_ORIGIN_REGEX", r"^https:\/\/.*\.vercel\.app$")
+# Normalize double-escaped dots from YAML
+cors_regex = raw_regex.replace(r"\\.", r"\.")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"] if allow_all else unique_origins,
-    allow_origin_regex=os.environ.get("CORS_ORIGIN_REGEX", r"^https:\/\/.*\.vercel\.app$"),
+    allow_origin_regex=cors_regex,
     allow_credentials=not allow_all,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
+
+from fastapi.responses import JSONResponse
+from fastapi import Request
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Ensure unhandled 500 errors always include CORS headers so browsers see real error details."""
+    origin = request.headers.get("origin", "*")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal server error: {str(exc)}"},
+        headers={
+            "Access-Control-Allow-Origin": origin if origin else "*",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
 
 # Mount Routers
 app.include_router(upload_router)
@@ -120,6 +144,7 @@ def health_check():
         "status": "healthy",
         "service": "SONAR-INTEL API",
         "database": "active",
+        "version": "1.0.2-streaming",
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
     }
 

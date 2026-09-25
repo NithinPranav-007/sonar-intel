@@ -99,7 +99,7 @@ def get_demo_samples() -> List[Dict[str, Any]]:
 
 
 @router.post("/load/{sample_id}", response_model=Dict[str, Any])
-def load_demo_sample(sample_id: str, db: Session = Depends(get_db)):
+async def load_demo_sample(sample_id: str, db: Session = Depends(get_db)):
     """
     Ingests and executes the full inference pipeline on a curated demo sample.
     Saves the survey and contacts to the database and returns complete results.
@@ -151,8 +151,10 @@ def load_demo_sample(sample_id: str, db: Session = Depends(get_db)):
         data_quality=quality["quality_score"]
     )
 
-    # 2. Real Inference using streamed tile processing
-    contacts = inference_service.run_survey_analysis(
+    # 2. Real Inference using streamed tile processing in threadpool
+    from starlette.concurrency import run_in_threadpool
+    contacts = await run_in_threadpool(
+        inference_service.run_survey_analysis,
         survey_id=survey_id,
         raw_image_path=raw_dest,
         nav_file_path=nav_dest,

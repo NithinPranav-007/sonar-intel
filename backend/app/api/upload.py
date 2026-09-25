@@ -166,12 +166,15 @@ async def upload_survey(
 
     try:
 
+        from starlette.concurrency import run_in_threadpool
+
         (
             raw_path,
             width,
             height,
             quality,
-        ) = sonar_service.store_raw_upload(
+        ) = await run_in_threadpool(
+            sonar_service.store_raw_upload,
             file_bytes=file_bytes,
             survey_id=survey_id,
             original_filename=sonar_file.filename,

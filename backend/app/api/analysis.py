@@ -38,8 +38,11 @@ async def analyze_survey(
     start_time = time.time()
     conf_thresh = request.confidence_threshold if request else 0.25
 
+    from starlette.concurrency import run_in_threadpool
+
     try:
-        contacts = inference_service.run_survey_analysis(
+        contacts = await run_in_threadpool(
+            inference_service.run_survey_analysis,
             survey_id=survey.survey_id,
             raw_image_path=survey.raw_image_path,
             nav_file_path=survey.nav_file_path,
