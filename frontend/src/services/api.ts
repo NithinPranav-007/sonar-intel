@@ -15,9 +15,6 @@ export const resolveApiUrl = (path?: string): string => {
 
 const client = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 export const apiService = {
@@ -39,7 +36,7 @@ export const apiService = {
     }
     const response = await client.post<SurveyUploadResponse>('/api/surveys/upload', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': undefined,
       },
     });
     return response.data;
