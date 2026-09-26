@@ -57,11 +57,19 @@ async def analyze_survey(
 
     exec_time = round((time.time() - start_time) * 1000.0, 1)
 
+    last_res = inference_service.last_inference_result
+    backend_val = last_res.backend if last_res else "local"
+    fallback_used_val = last_res.fallback_used if last_res else False
+    fallback_reason_val = last_res.fallback_reason if last_res else None
+
     return AnalysisResponse(
         survey_id=survey_id,
         contacts_count=len(saved_contacts),
         contacts=saved_contacts,
-        execution_time_ms=exec_time
+        execution_time_ms=exec_time,
+        backend=backend_val,
+        fallback_used=fallback_used_val,
+        fallback_reason=fallback_reason_val
     )
 
 

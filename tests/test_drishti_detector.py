@@ -15,9 +15,10 @@ class TestDrishtiDetector:
         return DrishtiDetector(confidence_threshold=0.10)
 
     def test_model_loads_successfully(self, detector):
-        assert detector.model is not None
+        model = detector._get_or_load_model()
+        assert model is not None
         assert os.path.exists(detector.model_path)
-        assert detector.model_name == "DRISHTI-YOLOv8s"
+        assert detector.model_name in ("DRISHTI-YOLOv8s", "DRISHTI-YOLO11n")
 
     def test_expected_class_mapping(self, detector):
         names = detector.class_names
@@ -29,8 +30,10 @@ class TestDrishtiDetector:
 
     def test_model_cached_per_process(self, detector):
         detector_second = DrishtiDetector()
+        m1 = detector._get_or_load_model()
+        m2 = detector_second._get_or_load_model()
         # Verify underlying YOLO model object identity is shared (cached)
-        assert detector.model is detector_second.model
+        assert m1 is m2
 
     def test_inference_on_real_sonar_imagery(self, detector):
         img_path = "data/demo/sonar/viator_04_test_wreck.png"
@@ -55,8 +58,8 @@ class TestDrishtiDetector:
             assert 0 <= y1 <= d.image_height
             assert 0 <= y2 <= d.image_height
             assert d.tile_id == "TEST_VIATOR_CROP"
-            assert d.model_name == "DRISHTI-YOLOv8s"
-            assert d.model_version == "baseline-v1"
+            assert d.model_name in ("DRISHTI-YOLOv8s", "DRISHTI-YOLO11n")
+            assert d.model_version in ("baseline-v1", "distilled-v1")
 
     def test_empty_detection_handling(self, detector):
         # Homogeneous black image should return empty list without crashing

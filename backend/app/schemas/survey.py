@@ -29,6 +29,10 @@ class AnalysisResponse(BaseModel):
     contacts_count: int
     contacts: List[Contact]
     execution_time_ms: float
+    backend: str = Field(default="local", description="Inference backend used: 'huggingface' or 'local'")
+    fallback_used: bool = Field(default=False, description="Whether local fallback was triggered after HF failure")
+    fallback_reason: Optional[str] = Field(default=None, description="Reason for fallback if HF failed")
+
 
 
 class SurveySummary(BaseModel):

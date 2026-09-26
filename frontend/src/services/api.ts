@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Contact, SurveyUploadResponse, SurveySummary, NavWaypoint, ReviewStatus } from '../types/detection';
+import { Contact, SurveyUploadResponse, SurveySummary, NavWaypoint, ReviewStatus, AnalysisResult } from '../types/detection';
 
 const rawBase = import.meta.env.VITE_API_URL || '';
 export const API_BASE_URL = rawBase.replace(/\/+$/, '');
@@ -42,8 +42,8 @@ export const apiService = {
     return response.data;
   },
 
-  async analyzeSurvey(surveyId: string, confidenceThreshold = 0.25): Promise<{ contacts: Contact[]; execution_time_ms: number }> {
-    const response = await client.post<{ contacts: Contact[]; execution_time_ms: number }>(
+  async analyzeSurvey(surveyId: string, confidenceThreshold = 0.25): Promise<AnalysisResult> {
+    const response = await client.post<AnalysisResult>(
       `/api/surveys/${surveyId}/analyze`,
       { confidence_threshold: confidenceThreshold }
     );

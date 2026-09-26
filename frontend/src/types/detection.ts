@@ -31,7 +31,18 @@ export interface Contact {
   localization_status: LocalizationStatus;
   review_status: ReviewStatus;
   review_note: string | null;
+  model_name?: string;
   model_version: string;
+}
+
+export interface AnalysisResult {
+  survey_id: string;
+  contacts_count: number;
+  contacts: Contact[];
+  execution_time_ms: number;
+  backend: 'huggingface' | 'local';
+  fallback_used?: boolean;
+  fallback_reason?: string | null;
 }
 
 export interface SurveyUploadResponse {
@@ -44,6 +55,9 @@ export interface SurveyUploadResponse {
   raw_image_url: string;
   processed_image_url?: string;
   message: string;
+  backend?: 'huggingface' | 'local';
+  fallback_used?: boolean;
+  fallback_reason?: string | null;
 }
 
 export interface SurveySummary {
@@ -56,6 +70,7 @@ export interface SurveySummary {
   reviewed_count: number;
   pending_count: number;
   data_quality_avg: number;
+  active_backend?: 'huggingface' | 'local';
 }
 
 export interface NavWaypoint {
@@ -64,3 +79,4 @@ export interface NavWaypoint {
   ping_id: number;
   heading: number;
 }
+
