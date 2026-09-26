@@ -99,9 +99,22 @@ class InferenceService:
                 offset_y=0
             )
         else:
-            # Memory-safe stream of 640x640 tiles (processes 1 tile at a time without accumulating arrays)
+            # Low-latency, memory-safe adaptive tiling for production serverless / 512MB deployments
+            # If image dimensions exceed MAX_INFERENCE_DIM (1280px), adaptively scale for tile generation
+            # while mapping bounding boxes back with exact pixel precision to the original raw image.
+            MAX_INFERENCE_DIM = 1280
+            max_side = max(img_h, img_w)
+            if max_side > MAX_INFERENCE_DIM:
+                scale = MAX_INFERENCE_DIM / float(max_side)
+                scaled_w = max(640, int(img_w * scale))
+                scaled_h = max(640, int(img_h * scale))
+                tiling_img = cv2.resize(raw_image, (scaled_w, scaled_h), interpolation=cv2.INTER_AREA)
+            else:
+                scale = 1.0
+                tiling_img = raw_image
+
             raw_detections: List[DrishtiDetection] = []
-            for tile in generate_tiles_iter(raw_image, tile_size=settings.IMAGE_SIZE, overlap=0.20):
+            for tile in generate_tiles_iter(tiling_img, tile_size=settings.IMAGE_SIZE, overlap=0.15):
                 tile_img = tile["tile_image"]
                 offset_x = tile["offset_x"]
                 offset_y = tile["offset_y"]
@@ -112,8 +125,19 @@ class InferenceService:
                     offset_x=offset_x,
                     offset_y=offset_y
                 )
+                if scale != 1.0:
+                    for d in tile_dets:
+                        d.bbox = [
+                            int(d.bbox[0] / scale),
+                            int(d.bbox[1] / scale),
+                            int(d.bbox[2] / scale),
+                            int(d.bbox[3] / scale)
+                        ]
                 raw_detections.extend(tile_dets)
                 del tile_img, tile
+
+            if tiling_img is not raw_image:
+                del tiling_img
             gc.collect()
 
         # 3. Deduplicate detections across overlapping tile boundaries

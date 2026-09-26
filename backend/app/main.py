@@ -102,22 +102,49 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi import Request
+
+@app.middleware("http")
+async def ensure_cors_middleware(request: Request, call_next):
+    """Guarantees CORS headers on every response, including errors and preflight OPTIONS."""
+    origin = request.headers.get("origin")
+    if request.method == "OPTIONS":
+        response = Response(status_code=200)
+    else:
+        try:
+            response = await call_next(request)
+        except Exception as exc:
+            response = JSONResponse(
+                status_code=500,
+                content={"detail": f"Internal server error: {str(exc)}"}
+            )
+
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Expose-Headers"] = "*"
+    elif not response.headers.get("Access-Control-Allow-Origin"):
+        response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Ensure unhandled 500 errors always include CORS headers so browsers see real error details."""
-    origin = request.headers.get("origin", "*")
+    origin = request.headers.get("origin")
+    headers = {
+        "Access-Control-Allow-Origin": origin if origin else "*",
+        "Access-Control-Allow-Methods": "*",
+        "Access-Control-Allow-Headers": "*",
+    }
+    if origin:
+        headers["Access-Control-Allow-Credentials"] = "true"
     return JSONResponse(
         status_code=500,
         content={"detail": f"Internal server error: {str(exc)}"},
-        headers={
-            "Access-Control-Allow-Origin": origin if origin else "*",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Allow-Methods": "*",
-            "Access-Control-Allow-Headers": "*",
-        }
+        headers=headers
     )
 
 # Mount Routers
