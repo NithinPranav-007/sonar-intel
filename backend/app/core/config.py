@@ -46,13 +46,20 @@ class Settings:
     )
 
     # ------------------------------------------------------------------
-    # Hugging Face & Remote Provider Integration
+    # Hugging Face & Hybrid Inference Architecture
     # ------------------------------------------------------------------
-    INFERENCE_PROVIDER: str = os.getenv("INFERENCE_PROVIDER", "local")
-    HF_SPACE: str = os.getenv("HF_SPACE", "SalmonAngelo/Sonar-Intel")
+    INFERENCE_PROVIDER: str = os.getenv("INFERENCE_PROVIDER", "hybrid")
+    HF_SPACE: str = os.getenv("HF_SPACE", "awzsxde/marine-sonar-ai")
+    HF_API_ENDPOINT: str = os.getenv("HF_API_ENDPOINT", "/predict")
+    HF_API_ENABLED: bool = os.getenv("HF_API_ENABLED", "true").lower() in ("true", "1", "yes")
+    HF_API_TIMEOUT: int = int(os.getenv("HF_API_TIMEOUT", "60"))
     HF_MODEL_ID: str = os.getenv("HF_MODEL_ID", "Samyukta31/sonar_yolo")
     HF_MODEL_FILE: str = os.getenv("HF_MODEL_FILE", "best_distilled_yolo11n.pt")
     HF_TOKEN: str = os.getenv("HF_TOKEN", "")
+
+    def is_hf_configured(self) -> bool:
+        """Returns True only if HF inference is enabled and a valid token is present."""
+        return bool(self.HF_API_ENABLED and self.HF_TOKEN and self.HF_TOKEN.strip())
 
     # ------------------------------------------------------------------
     # Inference Hyperparameters

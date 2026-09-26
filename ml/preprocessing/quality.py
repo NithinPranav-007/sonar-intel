@@ -34,9 +34,12 @@ def compute_image_quality(image: np.ndarray) -> Dict[str, float]:
             "is_usable": False
         }
 
-    if len(image.shape) == 3:
+    if len(image.shape) == 3 and image.shape[2] >= 3:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         created_gray = True
+    elif len(image.shape) == 3 and image.shape[2] == 1:
+        gray = image[:, :, 0]
+        created_gray = False
     else:
         gray = image
         created_gray = False

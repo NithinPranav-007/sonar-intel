@@ -31,6 +31,9 @@ export const Dashboard: React.FC = () => {
     loading,
     analyzing,
     error,
+    activeBackend,
+    fallbackUsed,
+    fallbackReason,
     setSelectedContact,
     loadSurvey,
     uploadSurvey,
@@ -136,6 +139,9 @@ export const Dashboard: React.FC = () => {
           contacts={contacts}
           selectedContact={selectedContact}
           analyzing={analyzing}
+          activeBackend={activeBackend}
+          fallbackUsed={fallbackUsed}
+          fallbackReason={fallbackReason}
           onSelectContact={setSelectedContact}
           onRunAnalysis={() => runAnalysis(0.20)}
           onVerifyContact={handleVerifyContact}

@@ -31,6 +31,10 @@ from ml.fusion.evidence_fusion import EvidenceFusionEngine
 from ml.fusion.contact_package import ContactPackage, ContactPackageBuilder
 
 
+from ml.inference.hybrid_engine import HybridInferenceEngine
+from ml.inference.common import CommonDetection, InferenceResult
+
+
 _shared_inference_service: Optional["InferenceService"] = None
 
 def get_inference_service() -> "InferenceService":
@@ -56,6 +60,8 @@ class InferenceService:
             iou_threshold=iou_threshold if iou_threshold is not None else settings.IOU_THRESHOLD,
             device=device or settings.DEVICE
         )
+        self.hybrid_engine = HybridInferenceEngine(local_detector=self.detector)
+        self.last_inference_result: Optional[InferenceResult] = None
 
     def run_survey_analysis(
         self,
@@ -66,6 +72,7 @@ class InferenceService:
     ) -> List[Contact]:
         """
         Executes the full anomaly detection pipeline on an SSS survey swath.
+        Prioritizes remote Hugging Face Space API first, falling back to local DRISHTI detector.
         Returns a list of Canonical Contact objects.
         """
         if confidence_threshold is not None:
@@ -89,59 +96,81 @@ class InferenceService:
         quality_metrics = compute_image_quality(raw_image)
         quality_score = quality_metrics.get("quality_score", 1.0)
 
-        # 2. Tiling for side-scan sonar waterfall swaths
-        # If image dimensions fit directly in 640x640, run directly
-        if img_w <= settings.IMAGE_SIZE and img_h <= settings.IMAGE_SIZE:
-            raw_detections = self.detector.predict(
-                image=raw_image,
-                tile_id=f"{survey_id}_FULL",
-                offset_x=0,
-                offset_y=0
-            )
+        # 2. Execute Hybrid Inference (Hugging Face Space -> Local Fallback)
+        inference_result = self.hybrid_engine.run_inference(
+            image_path=raw_image_path,
+            image=raw_image,
+            confidence_threshold=confidence_threshold
+        )
+        self.last_inference_result = inference_result
+
+        raw_detections: List[DrishtiDetection] = []
+
+        if inference_result.backend == "huggingface" and inference_result.success:
+            # Hugging Face Space succeeded: map remote detections to internal representation
+            for d in inference_result.detections:
+                raw_detections.append(DrishtiDetection(
+                    class_id=d.class_id or 0,
+                    class_name=d.class_name,
+                    confidence=d.confidence,
+                    bbox=d.bbox,
+                    image_width=img_w,
+                    image_height=img_h,
+                    tile_id=f"{survey_id}_HF",
+                    model_name=inference_result.model_name,
+                    model_version=inference_result.model_version,
+                    is_filtered=d.is_filtered,
+                    filter_reason=d.filter_reason
+                ))
         else:
-            # Low-latency, memory-safe adaptive tiling for production serverless / 512MB deployments
-            # If image dimensions exceed MAX_INFERENCE_DIM (1280px), adaptively scale for tile generation
-            # while mapping bounding boxes back with exact pixel precision to the original raw image.
-            MAX_INFERENCE_DIM = 1280
-            max_side = max(img_h, img_w)
-            if max_side > MAX_INFERENCE_DIM:
-                scale = MAX_INFERENCE_DIM / float(max_side)
-                scaled_w = max(640, int(img_w * scale))
-                scaled_h = max(640, int(img_h * scale))
-                tiling_img = cv2.resize(raw_image, (scaled_w, scaled_h), interpolation=cv2.INTER_AREA)
-            else:
-                scale = 1.0
-                tiling_img = raw_image
-
-            raw_detections: List[DrishtiDetection] = []
-            for tile in generate_tiles_iter(tiling_img, tile_size=settings.IMAGE_SIZE, overlap=0.15):
-                tile_img = tile["tile_image"]
-                offset_x = tile["offset_x"]
-                offset_y = tile["offset_y"]
-                tile_id_str = f"{survey_id}_T{tile['tile_id']:03d}"
-                tile_dets = self.detector.predict(
-                    image=tile_img,
-                    tile_id=tile_id_str,
-                    offset_x=offset_x,
-                    offset_y=offset_y
+            # Local detector execution (or local fallback from HF failure)
+            if img_w <= settings.IMAGE_SIZE and img_h <= settings.IMAGE_SIZE:
+                raw_detections = self.detector.predict(
+                    image=raw_image,
+                    tile_id=f"{survey_id}_FULL",
+                    offset_x=0,
+                    offset_y=0
                 )
-                if scale != 1.0:
-                    for d in tile_dets:
-                        d.bbox = [
-                            int(d.bbox[0] / scale),
-                            int(d.bbox[1] / scale),
-                            int(d.bbox[2] / scale),
-                            int(d.bbox[3] / scale)
-                        ]
-                raw_detections.extend(tile_dets)
-                del tile_img, tile
+            else:
+                # Low-latency, memory-safe adaptive tiling for production serverless deployments
+                MAX_INFERENCE_DIM = 1280
+                max_side = max(img_h, img_w)
+                if max_side > MAX_INFERENCE_DIM:
+                    scale = MAX_INFERENCE_DIM / float(max_side)
+                    scaled_w = max(640, int(img_w * scale))
+                    scaled_h = max(640, int(img_h * scale))
+                    tiling_img = cv2.resize(raw_image, (scaled_w, scaled_h), interpolation=cv2.INTER_AREA)
+                else:
+                    scale = 1.0
+                    tiling_img = raw_image
 
-            if tiling_img is not raw_image:
-                del tiling_img
-            gc.collect()
+                for tile in generate_tiles_iter(tiling_img, tile_size=settings.IMAGE_SIZE, overlap=0.15):
+                    tile_img = tile["tile_image"]
+                    offset_x = tile["offset_x"]
+                    offset_y = tile["offset_y"]
+                    tile_id_str = f"{survey_id}_T{tile['tile_id']:03d}"
+                    tile_dets = self.detector.predict(
+                        image=tile_img,
+                        tile_id=tile_id_str,
+                        offset_x=offset_x,
+                        offset_y=offset_y
+                    )
+                    if scale != 1.0:
+                        for d in tile_dets:
+                            d.bbox = [
+                                int(d.bbox[0] / scale),
+                                int(d.bbox[1] / scale),
+                                int(d.bbox[2] / scale),
+                                int(d.bbox[3] / scale)
+                            ]
+                    raw_detections.extend(tile_dets)
+                    del tile_img, tile
+
+                if tiling_img is not raw_image:
+                    del tiling_img
+                gc.collect()
 
         # 3. Deduplicate detections across overlapping tile boundaries
-        # Adapt to dict format for existing deduplicate_detections
         det_dicts = [
             {
                 "class_name": d.class_name,

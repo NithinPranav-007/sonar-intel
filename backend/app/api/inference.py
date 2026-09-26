@@ -7,6 +7,7 @@ Decoupled from database persistence or frontend-specific views.
 """
 
 from typing import List, Optional
+import os
 import cv2
 import numpy as np
 from fastapi import APIRouter, File, UploadFile, HTTPException, Query
@@ -37,6 +38,10 @@ class ImageMetadata(BaseModel):
 class InferenceResponse(BaseModel):
     model_name: str
     model_version: str
+    backend: str = Field(default="local", description="Inference backend: 'huggingface' or 'local'")
+    fallback_used: bool = Field(default=False, description="Whether local fallback was triggered after HF failure")
+    fallback_reason: Optional[str] = Field(default=None, description="Reason for fallback if HF failed")
+    annotated_image: Optional[str] = Field(default=None, description="Annotated image path or URL if returned by remote API")
     image: ImageMetadata
     detections: List[DetectionItem]
     filtered_detections_count: int = Field(default=0, description="Count of detections filtered by product policy (e.g. crab_pot)")
@@ -52,9 +57,9 @@ async def detect_sonar_anomalies(
     confidence_threshold: Optional[float] = Query(None, ge=0.0, le=1.0)
 ):
     """
-    Executes DRISHTI YOLOv8s anomaly candidate proposal on a single uploaded sonar image.
-    Applies Lee speckle filtering + CLAHE preprocessing internally.
-    Returns standardized detection schema with AI_CANDIDATE review status.
+    Executes hybrid anomaly candidate detection on a single uploaded sonar image.
+    Prioritizes Hugging Face Space API as primary, falling back to local DRISHTI detector.
+    Returns standardized detection schema with AI_CANDIDATE review status and backend provenance.
     """
     # 1. Validate MIME type
     if not file.content_type or not file.content_type.startswith("image/"):
@@ -75,23 +80,37 @@ async def detect_sonar_anomalies(
         raise HTTPException(status_code=400, detail="Failed to decode uploaded image. Invalid or corrupt image file.")
 
     h, w = image.shape[:2]
-    detector = _get_detector()
 
-    # 4. Set optional override threshold
-    orig_conf = detector.confidence_threshold
-    if confidence_threshold is not None:
-        detector.confidence_threshold = confidence_threshold
+    # Save to a temporary file for remote HF upload
+    import tempfile
+    suffix = ".png" if not file.filename else os.path.splitext(file.filename)[1] or ".png"
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp_file:
+        tmp_file.write(contents)
+        tmp_path = tmp_file.name
 
     try:
-        raw_detections = detector.predict(image)
+        inference_service = get_inference_service()
+        hybrid_engine = inference_service.hybrid_engine
+        result = hybrid_engine.run_inference(
+            image_path=tmp_path,
+            image=image,
+            confidence_threshold=confidence_threshold
+        )
     finally:
-        detector.confidence_threshold = orig_conf
+        if os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except Exception:
+                pass
+
+    if not result.success and result.error:
+        raise HTTPException(status_code=500, detail=result.error)
 
     # 5. Separate eligible detections from product-filtered detections (e.g. crab_pot)
     eligible_detections: List[DetectionItem] = []
     filtered_count = 0
 
-    for det in raw_detections:
+    for det in result.detections:
         if det.is_filtered:
             filtered_count += 1
             continue
@@ -103,9 +122,14 @@ async def detect_sonar_anomalies(
         ))
 
     return InferenceResponse(
-        model_name=detector.model_name,
-        model_version=detector.model_version,
+        model_name=result.model_name or settings.MODEL_NAME,
+        model_version=result.model_version or settings.MODEL_VERSION,
+        backend=result.backend,
+        fallback_used=result.fallback_used,
+        fallback_reason=result.fallback_reason,
+        annotated_image=result.annotated_image,
         image=ImageMetadata(width=w, height=h),
         detections=eligible_detections,
         filtered_detections_count=filtered_count
     )
+

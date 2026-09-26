@@ -24,6 +24,9 @@ interface SonarAnalysisPageProps {
   contacts: Contact[];
   selectedContact: Contact | null;
   analyzing: boolean;
+  activeBackend?: 'huggingface' | 'local' | null;
+  fallbackUsed?: boolean;
+  fallbackReason?: string | null;
   onSelectContact: (contact: Contact) => void;
   onRunAnalysis: () => void;
   onVerifyContact?: (contact: Contact) => void;
@@ -35,6 +38,9 @@ export const SonarAnalysisPage: React.FC<SonarAnalysisPageProps> = ({
   contacts,
   selectedContact,
   analyzing,
+  activeBackend,
+  fallbackUsed,
+  fallbackReason,
   onSelectContact,
   onRunAnalysis,
   onVerifyContact,
@@ -222,8 +228,27 @@ export const SonarAnalysisPage: React.FC<SonarAnalysisPageProps> = ({
           </h2>
         </div>
 
-        {/* Quick Actions */}
-        <div className="flex items-center gap-3">
+        {/* Quick Actions & Backend Status */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Active Backend Indicator */}
+          {analyzing ? (
+            <div className="text-xs font-bold px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 flex items-center gap-2 animate-pulse shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-blue-600 animate-ping" />
+              <span>Running AI detection... Backend: Hugging Face (Primary)</span>
+            </div>
+          ) : activeBackend === 'huggingface' ? (
+            <div className="text-xs font-bold px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center gap-1.5 shadow-sm" title="Inference executed via Hugging Face Space API">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span>Backend: Hugging Face</span>
+            </div>
+          ) : activeBackend === 'local' ? (
+            <div className="text-xs font-bold px-3.5 py-1.5 rounded-full bg-purple-50 border border-purple-200 text-purple-700 flex items-center gap-1.5 shadow-sm" title={fallbackUsed ? `Fallback active: ${fallbackReason || 'HF unavailable'}` : 'Local ML Model'}>
+              <span className="w-2 h-2 rounded-full bg-purple-500" />
+              <span>Backend: Local ML Model</span>
+              {fallbackUsed && <span className="text-[10px] bg-purple-200 text-purple-800 px-1.5 py-0.2 rounded-full">Fallback</span>}
+            </div>
+          ) : null}
+
           <div className="text-xs font-semibold px-4 py-2 rounded-full bg-[#f8fafc] border border-[#e2e8f0] text-[#0f172a] flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span>{survey ? survey.filename : 'No Swath Active'}</span>
@@ -240,6 +265,23 @@ export const SonarAnalysisPage: React.FC<SonarAnalysisPageProps> = ({
           )}
         </div>
       </div>
+
+      {/* Fallback Notice Banner */}
+      {fallbackUsed && fallbackReason && (
+        <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between shadow-soft">
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+            <div>
+              <span className="font-bold">Hugging Face inference unavailable: </span>
+              <span className="text-amber-800">{fallbackReason}. </span>
+              <span className="font-semibold text-emerald-800">Automatically switched to local DRISHTI model.</span>
+            </div>
+          </div>
+          <span className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-800 shrink-0">
+            AUTO-RECOVERY ACTIVE
+          </span>
+        </div>
+      )}
 
       {/* 2. Three-Column Main Analysis Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[640px]">

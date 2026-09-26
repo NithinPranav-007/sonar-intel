@@ -11,10 +11,18 @@ export function useSurvey() {
   const [loading, setLoading] = useState<boolean>(false);
   const [analyzing, setAnalyzing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeBackend, setActiveBackend] = useState<'huggingface' | 'local' | null>(null);
+  const [fallbackUsed, setFallbackUsed] = useState<boolean>(false);
+  const [fallbackReason, setFallbackReason] = useState<string | null>(null);
 
   const loadSurvey = useCallback(async (surveyData: SurveyUploadResponse) => {
     setSurvey(surveyData);
     setError(null);
+    if (surveyData.backend) {
+      setActiveBackend(surveyData.backend);
+      setFallbackUsed(Boolean(surveyData.fallback_used));
+      setFallbackReason(surveyData.fallback_reason || null);
+    }
     try {
       const track = await apiService.getSurveyTrack(surveyData.survey_id);
       setNavTrack(track);
@@ -24,6 +32,12 @@ export function useSurvey() {
         setSelectedContact(existingContacts[0]);
         const sum = await apiService.getSurveySummary(surveyData.survey_id);
         setSummary(sum);
+        // Detect model backend from contacts if available
+        if (existingContacts[0].model_name?.includes('HuggingFace')) {
+          setActiveBackend('huggingface');
+        } else {
+          setActiveBackend('local');
+        }
       } else {
         setSelectedContact(null);
         setSummary(null);
@@ -40,6 +54,9 @@ export function useSurvey() {
     try {
       const result = await apiService.analyzeSurvey(survey.survey_id, confidenceThreshold);
       setContacts(result.contacts);
+      setActiveBackend(result.backend);
+      setFallbackUsed(Boolean(result.fallback_used));
+      setFallbackReason(result.fallback_reason || null);
       if (result.contacts.length > 0) {
         setSelectedContact(result.contacts[0]);
       }
@@ -110,6 +127,9 @@ export function useSurvey() {
       try {
         const result = await apiService.analyzeSurvey(surveyData.survey_id, 0.20);
         setContacts(result.contacts);
+        setActiveBackend(result.backend);
+        setFallbackUsed(Boolean(result.fallback_used));
+        setFallbackReason(result.fallback_reason || null);
         if (result.contacts.length > 0) {
           setSelectedContact(result.contacts[0]);
         }
@@ -138,6 +158,9 @@ export function useSurvey() {
     loading,
     analyzing,
     error,
+    activeBackend,
+    fallbackUsed,
+    fallbackReason,
     setSelectedContact,
     loadSurvey,
     uploadSurvey,

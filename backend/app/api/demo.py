@@ -123,7 +123,7 @@ async def load_demo_sample(sample_id: str, db: Session = Depends(get_db)):
         shutil.copyfile(nav_file, nav_dest)
 
     # 1. Inspect image dimensions and quality without keeping duplicate buffers in RAM
-    img = cv2.imread(raw_dest, cv2.IMREAD_UNCHANGED)
+    img = cv2.imread(raw_dest, cv2.IMREAD_COLOR)
     if img is None:
         raise HTTPException(status_code=500, detail="Failed to load copied demo image.")
 
@@ -176,7 +176,7 @@ async def load_demo_sample(sample_id: str, db: Session = Depends(get_db)):
     )
 
     return {
-        "survey": survey_dto.dict(),
-        "contacts": [c.dict() for c in contacts],
+        "survey": survey_dto.model_dump(),
+        "contacts": [c.model_dump() for c in contacts],
         "sample_info": sample
     }
